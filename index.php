@@ -1,14 +1,6 @@
 <?php
-// index.php - Punto de entrada opcional
-// Este archivo puede redirigir a la página de login o al dashboard si ya está logueado
-
-session_start();
-
-// Verificar si ya hay una sesión iniciada
-if(isset($_SESSION['user_id'])){
-    header('Location: views/inicio.php');
-} else {
-    header('Location: views/login.php');
-}
+// index.php - Punto de entrada
+// Redirigir directamente a la landing page pública (inicio.php)
+header('Location: views/inicio.php');
 exit();
 ?>
