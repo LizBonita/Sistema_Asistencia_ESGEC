@@ -6,7 +6,9 @@
 const FP = {
   ws: null,
   wsUrl: 'ws://localhost:8765',
-  baseUrl: '/sistema_asistencia/',
+  baseUrl: window.location.hostname === 'localhost' 
+    ? '/sistema_asistencia/' 
+    : '/',
   connected: false,
   onMessage: null,
   reconnectTimer: null,
