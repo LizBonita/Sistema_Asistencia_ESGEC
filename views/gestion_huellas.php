@@ -392,23 +392,15 @@ $user_rol    = $_SESSION['user_rol_nombre'] ?? '';
                     }
                   </div>
 
-                  ${has && m.imagen_base64
+                  ${has && m.imagen_path
                     ? `<div class="fp-thumb-row">
-                        <img class="fp-thumb" src="data:image/bmp;base64,${m.imagen_base64}" alt="Huella" />
+                        <img class="fp-thumb" src="../${m.imagen_path}" alt="Huella" onerror="this.parentElement.style.display='none'" />
                         <div class="fp-thumb-label">
                           <strong>Huella verificada</strong>
                           Dedo índice derecho
                         </div>
                       </div>`
-                    : (has && m.imagen_path
-                      ? `<div class="fp-thumb-row">
-                          <img class="fp-thumb" src="../${m.imagen_path}" alt="Huella" onerror="this.parentElement.style.display='none'" />
-                          <div class="fp-thumb-label">
-                            <strong>Huella verificada</strong>
-                            Dedo índice derecho
-                          </div>
-                        </div>`
-                      : '')
+                    : ''
                   }
 
                   <button class="btn-action ${has ? 'btn-re-enroll' : 'btn-enroll'}"
