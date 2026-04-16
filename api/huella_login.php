@@ -46,9 +46,11 @@ try {
         throw new Exception("Maestro no encontrado");
     }
 
-    // 2. Registrar asistencia
-    $asistencia = new Asistencia($db);
-    $asistencia->maestro_id = $maestro_id;
+    // 2. Registrar asistencia CON control de retrasos
+    // ─── Configuración de horarios ───
+    $HORA_LIMITE_ENTRADA = '08:00:00';  // Hora máxima para entrar a tiempo
+    $HORA_LIMITE_SALIDA  = '14:00:00';  // Hora mínima de salida normal
+
     $hoy = date('Y-m-d');
     $hora_actual = date('H:i:s');
 
@@ -65,13 +67,28 @@ try {
     $tipo = 'entrada';
     if ($registro_hoy && $registro_hoy['hora_entrada'] && !$registro_hoy['hora_salida']) {
         // Ya tiene entrada sin salida → registrar salida
-        $update = $db->prepare("UPDATE asistencias SET hora_salida = ? WHERE id = ?");
-        $update->execute([$hora_actual, $registro_hoy['id']]);
+        $estado_salida = ($hora_actual < $HORA_LIMITE_SALIDA) ? 'Salida temprana' : 'A tiempo';
+        $update = $db->prepare("UPDATE asistencias SET hora_salida = ?, estado_salida = ? WHERE id = ?");
+        $update->execute([$hora_actual, $estado_salida, $registro_hoy['id']]);
         $tipo = 'salida';
     } else {
-        // Nueva entrada
-        $insert = $db->prepare("INSERT INTO asistencias (maestro_id, fecha, hora_entrada) VALUES (?, ?, ?)");
-        $insert->execute([$maestro_id, $hoy, $hora_actual]);
+        // Nueva entrada — calcular retraso
+        $estado_entrada = 'A tiempo';
+        $minutos_retraso = 0;
+
+        if ($hora_actual > $HORA_LIMITE_ENTRADA) {
+            $entrada = new DateTime($hora_actual);
+            $limite  = new DateTime($HORA_LIMITE_ENTRADA);
+            $diff = $entrada->diff($limite);
+            $minutos_retraso = ($diff->h * 60) + $diff->i;
+            $estado_entrada = 'Retraso';
+        }
+
+        $insert = $db->prepare("
+            INSERT INTO asistencias (maestro_id, fecha, hora_entrada, estado_entrada, minutos_retraso) 
+            VALUES (?, ?, ?, ?, ?)
+        ");
+        $insert->execute([$maestro_id, $hoy, $hora_actual, $estado_entrada, $minutos_retraso]);
     }
 
     // 3. Iniciar sesión PHP
@@ -86,6 +103,8 @@ try {
     $response["rol"] = $maestro['rol_nombre'] ?? 'Maestro';
     $response["tipo"] = $tipo;
     $response["hora"] = $hora_actual;
+    $response["estado"] = $tipo === 'entrada' ? ($estado_entrada ?? 'A tiempo') : ($estado_salida ?? 'A tiempo');
+    $response["minutos_retraso"] = $tipo === 'entrada' ? ($minutos_retraso ?? 0) : 0;
     $response["redirect"] = "inicio.php";
 
 } catch (Exception $e) {

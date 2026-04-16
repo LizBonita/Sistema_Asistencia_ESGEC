@@ -1,6 +1,7 @@
 <?php
 // api/huella_verificar.php
 // Obtiene todos los templates para identify, y luego registra asistencia si hay match
+date_default_timezone_set('America/Mexico_City');
 
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
@@ -47,19 +48,22 @@ try {
     }
 
     $maestro_id = intval($input['maestro_id'] ?? 0);
-    $tipo = $input['tipo'] ?? 'entrada'; // entrada o salida
     $imagen_path = $input['imagen_path'] ?? '';
 
     if ($maestro_id <= 0) {
         throw new Exception("maestro_id invalido");
     }
 
+    // ─── Configuración de horarios ───
+    $HORA_LIMITE_ENTRADA = '08:00:00';
+    $HORA_LIMITE_SALIDA  = '14:00:00';
+
     $fecha_hoy = date('Y-m-d');
     $hora_actual = date('H:i:s');
 
     // Verificar si ya tiene asistencia hoy
     $check = $db->prepare("SELECT id, hora_entrada, hora_salida FROM asistencias 
-                           WHERE maestro_id = ? AND fecha = ? LIMIT 1");
+                           WHERE maestro_id = ? AND fecha = ? ORDER BY id DESC LIMIT 1");
     $check->execute([$maestro_id, $fecha_hoy]);
     $asistencia_existente = $check->fetch(PDO::FETCH_ASSOC);
 
@@ -71,30 +75,39 @@ try {
             $response["tipo"] = "completo";
         } else {
             // Tiene entrada pero no salida — registrar salida
-            $update = $db->prepare("UPDATE asistencias SET hora_salida = ?, estado_salida = 'A Tiempo' WHERE id = ?");
-            $update->execute([$hora_actual, $asistencia_existente['id']]);
+            $estado_salida = ($hora_actual < $HORA_LIMITE_SALIDA) ? 'Salida temprana' : 'A tiempo';
+            $update = $db->prepare("UPDATE asistencias SET hora_salida = ?, estado_salida = ? WHERE id = ?");
+            $update->execute([$hora_actual, $estado_salida, $asistencia_existente['id']]);
             $response["success"] = true;
             $response["message"] = "Salida registrada: " . $hora_actual;
             $response["tipo"] = "salida";
             $response["hora"] = $hora_actual;
         }
     } else {
-        // No tiene asistencia hoy — registrar entrada
-        $asistencia = new Asistencia($db);
-        $asistencia->maestro_id = $maestro_id;
-        $asistencia->fecha = $fecha_hoy;
-        $asistencia->hora_entrada = $hora_actual;
-        $asistencia->estado_entrada = 'A Tiempo'; // TODO: calcular segun horario
-        $asistencia->minutos_retraso = 0;
+        // No tiene asistencia hoy — registrar entrada con cálculo de retraso
+        $estado_entrada = 'A tiempo';
+        $minutos_retraso = 0;
 
-        if ($asistencia->create()) {
-            $response["success"] = true;
-            $response["message"] = "Entrada registrada: " . $hora_actual;
-            $response["tipo"] = "entrada";
-            $response["hora"] = $hora_actual;
-        } else {
-            throw new Exception("Error al registrar asistencia");
+        if ($hora_actual > $HORA_LIMITE_ENTRADA) {
+            $entrada = new DateTime($hora_actual);
+            $limite  = new DateTime($HORA_LIMITE_ENTRADA);
+            $diff = $entrada->diff($limite);
+            $minutos_retraso = ($diff->h * 60) + $diff->i;
+            $estado_entrada = 'Retraso';
         }
+
+        $insert = $db->prepare("
+            INSERT INTO asistencias (maestro_id, fecha, hora_entrada, estado_entrada, minutos_retraso) 
+            VALUES (?, ?, ?, ?, ?)
+        ");
+        $insert->execute([$maestro_id, $fecha_hoy, $hora_actual, $estado_entrada, $minutos_retraso]);
+
+        $response["success"] = true;
+        $response["message"] = "Entrada registrada: " . $hora_actual;
+        $response["tipo"] = "entrada";
+        $response["hora"] = $hora_actual;
+        $response["estado"] = $estado_entrada;
+        $response["minutos_retraso"] = $minutos_retraso;
     }
 
     $response["maestro_id"] = $maestro_id;
