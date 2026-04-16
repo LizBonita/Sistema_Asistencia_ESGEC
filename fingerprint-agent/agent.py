@@ -143,6 +143,23 @@ def do_enroll(maestro_id, dedo="right-index-finger", ws_send=None):
         close_device()
         open_device()
 
+        # ── Capturar imagen ANTES del enrollment ──
+        # (mientras el dedo está seguro en el scanner)
+        pre_imagen_b64 = ""
+        pre_imagen_bmp = None
+        try:
+            pre_img = device.capture_sync(True, None)
+            if pre_img:
+                pre_imagen_bmp = image_to_bmp_bytes(pre_img)
+                pre_imagen_b64 = base64.b64encode(pre_imagen_bmp).decode("ascii")
+                print("[OK] Imagen pre-enrollment capturada")
+        except Exception as e:
+            print("Aviso: No se capturo imagen pre-enrollment: " + str(e))
+
+        # Reiniciar para enrollment limpio
+        close_device()
+        open_device()
+
         template = FPrint.Print.new(device)
 
         # El enrollment necesita multiples capturas
@@ -160,8 +177,6 @@ def do_enroll(maestro_id, dedo="right-index-finger", ws_send=None):
                 error_str = str(e)
                 if "retry" in error_str.lower():
                     continue
-                # enroll-stage-passed se maneja internamente
-                # solo seguimos intentando
                 continue
 
         # Serializar template
@@ -172,7 +187,7 @@ def do_enroll(maestro_id, dedo="right-index-finger", ws_send=None):
             template_raw = bytes(template_bytes)
         template_b64 = base64.b64encode(template_raw).decode("ascii")
 
-        # Capturar imagen final
+        # ── Intentar captura post-enrollment (puede fallar si quitó el dedo) ──
         imagen_b64 = ""
         imagen_path = ""
         try:
@@ -181,8 +196,16 @@ def do_enroll(maestro_id, dedo="right-index-finger", ws_send=None):
                 bmp = image_to_bmp_bytes(img)
                 imagen_b64 = base64.b64encode(bmp).decode("ascii")
                 imagen_path = save_image(bmp, maestro_id)
+                print("[OK] Imagen post-enrollment capturada")
         except Exception as img_err:
-            print("Aviso: No se pudo capturar imagen final: " + str(img_err))
+            print("Aviso: No se capturo imagen post-enrollment: " + str(img_err))
+
+        # ── Usar imagen pre-enrollment si post falló ──
+        if not imagen_b64 and pre_imagen_b64:
+            print("[OK] Usando imagen pre-enrollment como respaldo")
+            imagen_b64 = pre_imagen_b64
+            if pre_imagen_bmp:
+                imagen_path = save_image(pre_imagen_bmp, maestro_id)
 
         close_device()
 

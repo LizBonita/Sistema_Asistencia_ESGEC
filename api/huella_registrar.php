@@ -1,8 +1,7 @@
 <?php
 // api/huella_registrar.php
 // Registra template + imagen de huella dactilar para un maestro
-// La imagen se recibe como base64. Se guarda como archivo BMP en uploads/huellas/
-// Si falla guardar archivo, guarda base64 directamente en BD como fallback
+// Imagen se guarda como base64 directamente en la BD (funciona en cualquier hosting)
 
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
@@ -25,7 +24,8 @@ try {
 
     $maestro_id = intval($input['maestro_id'] ?? 0);
     $template = $input['template'] ?? '';
-    $imagen_base64_raw = $input['imagen_base64'] ?? '';
+    $imagen_base64 = $input['imagen_base64'] ?? '';
+    $imagen_path = $input['imagen_path'] ?? '';
     $dedo = $input['dedo'] ?? 'right-index-finger';
 
     if ($maestro_id <= 0) {
@@ -33,45 +33,6 @@ try {
     }
     if (empty($template)) {
         throw new Exception("template vacio");
-    }
-
-    // ── Guardar imagen BMP desde base64 ──
-    $imagen_path = '';
-    $imagen_base64_db = ''; // Fallback: guardar en BD si no se puede guardar archivo
-
-    if (!empty($imagen_base64_raw)) {
-        $uploadsDir = __DIR__ . '/../uploads/huellas';
-        
-        // Crear directorio si no existe
-        if (!is_dir($uploadsDir)) {
-            @mkdir($uploadsDir, 0755, true);
-        }
-
-        $timestamp = date('Ymd_His');
-        $filename = "huella_m{$maestro_id}_{$timestamp}.bmp";
-        $filepath = $uploadsDir . '/' . $filename;
-
-        // Decodificar base64
-        $imageData = base64_decode($imagen_base64_raw);
-        
-        if ($imageData !== false) {
-            // Intentar guardar archivo
-            $saved = @file_put_contents($filepath, $imageData);
-            
-            if ($saved !== false && file_exists($filepath)) {
-                // ✅ Archivo guardado exitosamente
-                $imagen_path = 'uploads/huellas/' . $filename;
-                $response["imagen_saved"] = "file";
-                $response["debug_path"] = $filepath;
-            } else {
-                // ❌ No se pudo guardar archivo — usar base64 en BD como fallback
-                $imagen_base64_db = $imagen_base64_raw;
-                $response["imagen_saved"] = "base64_fallback";
-                $response["debug_error"] = "No se pudo escribir en: " . $filepath;
-                $response["debug_writable"] = is_writable($uploadsDir) ? "si" : "no";
-                $response["debug_dir_exists"] = is_dir($uploadsDir) ? "si" : "no";
-            }
-        }
     }
 
     $db = (new Database())->getConnection();
@@ -84,13 +45,13 @@ try {
     $huella->dedo = $dedo;
     $huella->template_data = $template;
     $huella->imagen_path = $imagen_path;
-    $huella->imagen_base64 = $imagen_base64_db;
+    $huella->imagen_base64 = $imagen_base64;
 
     if ($huella->create()) {
         $response["success"] = true;
         $response["message"] = "Huella registrada exitosamente";
         $response["maestro_id"] = $maestro_id;
-        $response["imagen_path"] = $imagen_path;
+        $response["tiene_imagen"] = !empty($imagen_base64);
     } else {
         throw new Exception("Error al guardar en base de datos");
     }
