@@ -12,7 +12,13 @@ JOIN roles r ON u.rol_id = r.id
 WHERE r.nombre IN ('Director', 'Administrador', 'Admin')
 AND u.id NOT IN (SELECT usuario_id FROM maestros);
 
--- 2. Columna imagen_base64 si no existe
+-- 2. Cambiar estado_entrada y estado_salida de ENUM a VARCHAR
+-- (El ENUM solo permitía 'Puntual','Tolerancia','Retardo','Ausente')
+-- (Ahora necesitamos 'A tiempo', 'Retraso', 'Salida temprana', etc.)
+ALTER TABLE asistencias MODIFY COLUMN estado_entrada VARCHAR(30) DEFAULT 'Puntual';
+ALTER TABLE asistencias MODIFY COLUMN estado_salida VARCHAR(30) DEFAULT 'No Registrada';
+
+-- 3. Columna imagen_base64 si no existe
 ALTER TABLE huellas_dactilares ADD COLUMN IF NOT EXISTS 
   imagen_base64 LONGTEXT DEFAULT NULL 
   COMMENT 'Imagen de huella en base64 para uso en la nube' 
