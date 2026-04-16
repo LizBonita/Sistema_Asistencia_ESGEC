@@ -1,0 +1,13 @@
+# Imagenes de huellas capturadas (se generan localmente)
+uploads/huellas/*.bmp
+
+# Scripts de prueba del SDK (ya no se usan)
+fingerprint-agent/test_sdk.py
+fingerprint-agent/test_capture.py
+fingerprint-agent/captura_imagen.py
+fingerprint-agent/__pycache__/
+
+# Sistema
+.DS_Store
+Thumbs.db
+*.pyc
