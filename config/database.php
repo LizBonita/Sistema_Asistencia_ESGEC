@@ -11,8 +11,9 @@ class Database {
 
     public function __construct() {
         // Detectar ambiente automáticamente
-        if ($_SERVER['HTTP_HOST'] === 'localhost' || 
-            strpos($_SERVER['HTTP_HOST'] ?? '', 'localhost') !== false) {
+        $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+        if ($host === 'localhost' || 
+            strpos($host, 'localhost') !== false) {
             // ─── XAMPP Local ───
             $this->host     = 'localhost';
             $this->db_name  = 'sistema_asistencia_db';
