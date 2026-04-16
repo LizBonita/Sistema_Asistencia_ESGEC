@@ -1650,6 +1650,10 @@ $user_iniciales = $user_logged_in ? obtenerIniciales($user_nombre) : '';
                 <a href="asistencias_diarias.php" class="menu-item"><i class="fas fa-list-check"></i> Ver Asistencias Diarias</a>
                 <a href="reporte_quincenal.php" class="menu-item"><i class="fas fa-chart-bar"></i> Reporte Quincenal</a>
                 <a href="incidencias_pendientes.php" class="menu-item"><i class="fas fa-exclamation-triangle"></i> Justificaciones Pendientes</a>
+                <a href="checkin_huella.php" class="menu-item" style="background:linear-gradient(135deg,rgba(0,155,72,.1),rgba(14,77,146,.1));border:1px solid rgba(0,155,72,.25)"><i class="fas fa-fingerprint" style="color:#009B48"></i> Check-in Biométrico</a>
+                <?php if (in_array($user_rol, ['Director', 'Administrador', 'Admin'])): ?>
+                <a href="gestion_huellas.php" class="menu-item" style="background:linear-gradient(135deg,rgba(14,77,146,.1),rgba(0,155,72,.1));border:1px solid rgba(14,77,146,.25)"><i class="fas fa-fingerprint" style="color:#0E4D92"></i> Gestión de Huellas</a>
+                <?php endif; ?>
               </div>
             </div>
           </div>
@@ -1765,6 +1769,7 @@ $user_iniciales = $user_logged_in ? obtenerIniciales($user_nombre) : '';
         </div>
 
         <div class="dash-actions">
+          <a href="checkin_huella.php" style="background:linear-gradient(135deg,#0E4D92,#009B48);color:#fff"><i class="fa-solid fa-fingerprint"></i> Check-in Biométrico</a>
           <a href="asistencias_diarias.php"><i class="fa-solid fa-list-check"></i> Asistencias</a>
           <a href="incidencias_pendientes.php"><i class="fa-solid fa-triangle-exclamation"></i> Pendientes</a>
           <a href="reporte_quincenal.php"><i class="fa-solid fa-chart-column"></i> Reportes</a>
