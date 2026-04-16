@@ -22,7 +22,7 @@ class Database {
             $this->host     = 'localhost';
             $this->db_name  = 'u596094670_sistema_asist';
             $this->username = 'u596094670_Liz';
-            $this->password = '1l0324LizE@';
+            $this->password = 'LizE@110324';
         }
     }
 
