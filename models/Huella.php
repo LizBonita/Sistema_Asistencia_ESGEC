@@ -29,8 +29,8 @@ class Huella {
                   VALUES (:maestro_id, :dedo, :template_data, :imagen_path, :imagen_base64)
                   ON DUPLICATE KEY UPDATE 
                   template_data = VALUES(template_data),
-                  imagen_path = VALUES(imagen_path),
-                  imagen_base64 = VALUES(imagen_base64),
+                  imagen_path = CASE WHEN VALUES(imagen_path) != '' THEN VALUES(imagen_path) ELSE imagen_path END,
+                  imagen_base64 = CASE WHEN VALUES(imagen_base64) != '' THEN VALUES(imagen_base64) ELSE imagen_base64 END,
                   fecha_registro = CURRENT_TIMESTAMP,
                   activo = 1";
 
