@@ -4,10 +4,19 @@ header("Content-Type: application/json; charset=utf-8");
 session_start();
 ob_clean();
 
-$host = "localhost";
-$dbname = "sistema_asistencia_db"; 
-$username = "root";
-$password = ""; 
+// Detectar ambiente automáticamente
+if ($_SERVER['HTTP_HOST'] === 'localhost' || 
+    strpos($_SERVER['HTTP_HOST'] ?? '', 'localhost') !== false) {
+    $host = "localhost";
+    $dbname = "sistema_asistencia_db"; 
+    $username = "root";
+    $password = ""; 
+} else {
+    $host = "localhost";
+    $dbname = "u596094670_sistema_asist";
+    $username = "u596094670_Liz";
+    $password = "LizE@110324";
+}
 
 try {
     $conn = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);

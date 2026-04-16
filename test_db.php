@@ -7,7 +7,7 @@ $configs = [
         'host' => 'localhost',
         'db' => 'u596094670_sistema_asist',
         'user' => 'u596094670_Liz',
-        'pass' => '1l0324LizE@'
+        'pass' => 'LizE@110324'
     ],
 ];
 
