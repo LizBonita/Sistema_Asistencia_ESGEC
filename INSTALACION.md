@@ -226,6 +226,6 @@ El escáner de huella **solo funciona desde la computadora de la escuela** donde
 
 ## 📞 Soporte Técnico
 
-- **Desarrollador:** [Tu nombre]
+- **Desarrollador:** [Lizbeth]
 - **Repositorio:** https://github.com/LizBonita/Sistema_Asistencia_ESGEC
 - **Última actualización:** Abril 2026
