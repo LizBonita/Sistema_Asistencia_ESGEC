@@ -1697,6 +1697,22 @@ $user_iniciales = $user_logged_in ? obtenerIniciales($user_nombre) : '';
           </button>
         </form>
 
+        <div style="display:flex;align-items:center;margin:18px 0 10px;gap:12px">
+          <hr style="flex:1;border:none;border-top:1px solid #d0d7de">
+          <span style="color:#5f6b7a;font-size:13px">ó</span>
+          <hr style="flex:1;border:none;border-top:1px solid #d0d7de">
+        </div>
+
+        <button type="button" id="btnFingerprintLogin" onclick="fingerprintLogin()" style="
+          width:100%;padding:13px;border:2px solid #0E4D92;border-radius:12px;background:linear-gradient(135deg,rgba(14,77,146,.08),rgba(0,155,72,.08));
+          color:#0E4D92;font-size:16px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;
+          transition:all .3s">
+          <i class="fas fa-fingerprint" style="font-size:22px"></i> Ingresar con Huella
+        </button>
+        <p style="text-align:center;font-size:12px;color:#5f6b7a;margin-top:8px">Registra asistencia + inicia sesión automáticamente</p>
+
+        <div id="fpLoginStatus" style="display:none;text-align:center;padding:12px;margin-top:10px;border-radius:10px"></div>
+
         <div id="loginMessage" class="modal-message" style="display:none;"></div>
       </div>
     </div>
@@ -2342,6 +2358,73 @@ document.addEventListener('DOMContentLoaded', function () {
     if (k === 'l') { e.preventDefault(); openModalBtn?.click(); }
   });
 });
+</script>
+
+<script src="../assets/js/fingerprint.js"></script>
+<script>
+// ══════════ LOGIN POR HUELLA DACTILAR ══════════
+function fingerprintLogin() {
+  const btn = document.getElementById('btnFingerprintLogin');
+  const status = document.getElementById('fpLoginStatus');
+
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin" style="font-size:22px"></i> Pon tu dedo en el escáner...';
+  btn.style.background = 'linear-gradient(135deg, #0E4D92, #009B48)';
+  btn.style.color = '#fff';
+  status.style.display = 'none';
+
+  FP.checkIn((result) => {
+    if (result.match && result.maestro_id) {
+      // Huella reconocida → Login + asistencia via API
+      btn.innerHTML = '<i class="fas fa-check" style="font-size:22px"></i> Huella reconocida!';
+      btn.style.background = '#009B48';
+
+      const baseUrl = window.location.hostname === 'localhost' 
+        ? '/sistema_asistencia/' : '/';
+
+      fetch(baseUrl + 'api/huella_login.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ maestro_id: result.maestro_id }),
+      })
+        .then(r => r.json())
+        .then(data => {
+          if (data.success) {
+            status.style.display = 'block';
+            status.style.background = 'rgba(0,155,72,.1)';
+            status.style.color = '#009B48';
+            status.innerHTML = `
+              <div style="font-size:18px;font-weight:700">¡Bienvenido/a, ${data.nombre}!</div>
+              <div style="margin-top:4px">${data.tipo === 'entrada' ? '🟢 Entrada' : '🔵 Salida'} registrada — ${data.hora}</div>
+              <div style="margin-top:6px;font-size:13px">Redirigiendo...</div>
+            `;
+            setTimeout(() => window.location.reload(), 2000);
+          } else {
+            showFpError(data.message || 'Error al iniciar sesión');
+          }
+        })
+        .catch(() => showFpError('Error de conexión'));
+
+    } else if (result.match === false) {
+      showFpError('Huella no reconocida. Intenta de nuevo.');
+    } else {
+      showFpError(result.message || 'Error del escáner');
+    }
+  });
+
+  function showFpError(msg) {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-fingerprint" style="font-size:22px"></i> Ingresar con Huella';
+    btn.style.background = 'linear-gradient(135deg,rgba(14,77,146,.08),rgba(0,155,72,.08))';
+    btn.style.color = '#0E4D92';
+
+    status.style.display = 'block';
+    status.style.background = 'rgba(229,57,53,.1)';
+    status.style.color = '#e53935';
+    status.textContent = msg;
+    setTimeout(() => { status.style.display = 'none'; }, 4000);
+  }
+}
 </script>
 
 </body>
