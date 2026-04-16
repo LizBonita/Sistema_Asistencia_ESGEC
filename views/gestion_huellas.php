@@ -392,9 +392,12 @@ $user_rol    = $_SESSION['user_rol_nombre'] ?? '';
                     }
                   </div>
 
-                  ${has && m.imagen_path
+                  ${has && (m.imagen_path || m.imagen_base64)
                     ? `<div class="fp-thumb-row">
-                        <img class="fp-thumb" src="../${m.imagen_path}" alt="Huella" onerror="this.parentElement.style.display='none'" />
+                        <img class="fp-thumb" 
+                          src="${m.imagen_path ? '../' + m.imagen_path : 'data:image/bmp;base64,' + m.imagen_base64}" 
+                          alt="Huella" 
+                          onerror="this.parentElement.style.display='none'" />
                         <div class="fp-thumb-label">
                           <strong>Huella verificada</strong>
                           Dedo índice derecho
