@@ -317,9 +317,11 @@ $user_rol    = $_SESSION['user_rol_nombre'] ?? '';
                     : `<span class="badge pending">⏳ Sin huella</span>`
                   }
                 </div>
-                ${has && m.imagen_path
-                  ? `<img class="fp-thumb" src="../${m.imagen_path}" alt="Huella" onerror="this.style.display='none'" />`
-                  : ''
+                ${has && m.imagen_base64
+                  ? `<img class="fp-thumb" src="data:image/bmp;base64,${m.imagen_base64}" alt="Huella" />`
+                  : (has && m.imagen_path
+                    ? `<img class="fp-thumb" src="../${m.imagen_path}" alt="Huella" onerror="this.style.display='none'" />`
+                    : '')
                 }
                 ${m.fecha_huella ? `<div style="font-size:12px;color:#5f6b7a;margin-bottom:8px">Registrada: ${m.fecha_huella}</div>` : ''}
                 <button class="btn ${has ? 'btn-re-enroll' : 'btn-enroll'}"

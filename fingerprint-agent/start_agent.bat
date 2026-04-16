@@ -1,26 +1,18 @@
 @echo off
+chcp 65001 >nul 2>&1
 :: ===================================================
 ::  ESCANER DE HUELLA DACTILAR
 ::  Escuela Secundaria "Emperador Cuauhtemoc"
-::  
-::  Este programa conecta el lector de huellas con
-::  el sistema de asistencia en linea.
-::  
-::  Solo cierre esta ventana cuando termine de usar
-::  el escaner de huellas.
 :: ===================================================
 
 title Escaner de Huella - Sistema de Asistencia
 
 color 1F
 echo.
-echo  ╔══════════════════════════════════════════════╗
-echo  ║                                              ║
-echo  ║   SISTEMA DE ASISTENCIA ESCOLAR              ║
-echo  ║   Escaner de Huella Dactilar                  ║
-echo  ║   U.are.U 4500                                ║
-echo  ║                                              ║
-echo  ╚══════════════════════════════════════════════╝
+echo  ==================================================
+echo    SISTEMA DE ASISTENCIA ESCOLAR
+echo    Escaner de Huella Dactilar - U.are.U 4500
+echo  ==================================================
 echo.
 
 :: Verificar permisos de administrador
@@ -28,8 +20,7 @@ net session >nul 2>&1
 if errorlevel 1 (
     color 4F
     echo  [!] Se necesitan permisos de administrador.
-    echo      Cerrando y reabriendo como administrador...
-    echo.
+    echo      Reabriendo...
     powershell -Command "Start-Process '%~f0' -Verb RunAs"
     exit /b
 )
@@ -39,59 +30,57 @@ echo.
 
 :: Paso 1: Activar WSL
 echo  [1/3] Activando sistema Linux (WSL)...
-wsl -d Ubuntu -- echo "WSL listo" >nul 2>&1
+wsl -d Ubuntu -- echo listo >nul 2>&1
 start /B wsl -d Ubuntu -- sleep 99999
 timeout /t 3 /nobreak >nul
 echo         Listo.
 echo.
 
-:: Paso 2: Conectar escaner USB
-echo  [2/3] Conectando escaner de huella...
-"C:\Program Files\usbipd-win\usbipd.exe" attach --wsl --busid 1-1 --auto-attach 2>nul
-if errorlevel 1 (
+:retry_usb
+:: Paso 2: Auto-detectar y conectar escaner USB
+echo  [2/3] Buscando escaner de huella...
+
+:: Buscar el BUSID del U.are.U automaticamente (VID 05ba)
+set BUSID=
+for /f "tokens=1" %%i in ('powershell -Command "& \"C:\Program Files\usbipd-win\usbipd.exe\" list 2>$null | Select-String '05ba:000a' | ForEach-Object { ($_ -split '\s+')[0] }"') do set BUSID=%%i
+
+if "%BUSID%"=="" (
     echo.
-    echo  [!] No se pudo conectar el escaner.
-    echo      Verifique que el lector de huellas este
-    echo      conectado por USB a esta computadora.
+    echo  [!] No se encontro el lector de huellas.
+    echo      Conecte el U.are.U 4500 por USB y presione
+    echo      cualquier tecla para buscar de nuevo.
     echo.
-    echo  Presione cualquier tecla para intentar de nuevo
-    echo  o cierre esta ventana para cancelar.
     pause >nul
     goto :retry_usb
 )
-timeout /t 2 /nobreak >nul
+
+echo         Escaner encontrado en puerto %BUSID%
+echo         Conectando a Linux...
+
+:: Lanzar usbipd en BACKGROUND para que no bloquee
+start "" /B "C:\Program Files\usbipd-win\usbipd.exe" attach --wsl --busid %BUSID% --auto-attach
+timeout /t 5 /nobreak >nul
 echo         Listo.
 echo.
 
+:start_agent
 :: Paso 3: Iniciar agente
 echo  [3/3] Iniciando escaner...
 echo.
-echo  ══════════════════════════════════════════════
-echo   ESCANER LISTO
-echo   Abra el sistema de asistencia en el navegador
+echo  ==================================================
+echo   ESCANER LISTO - Puede usar la huella dactilar
+echo.
+echo   Abra el sistema en: localhost/sistema_asistencia
 echo   y use la funcion de huella dactilar.
 echo.
-echo   NO CIERRE ESTA VENTANA mientras use el escaner.
-echo  ══════════════════════════════════════════════
+echo   NO CIERRE esta ventana mientras use el escaner.
+echo  ==================================================
 echo.
 
 wsl -d Ubuntu -u root -- bash -c "PYTHONUNBUFFERED=1 python3 /mnt/c/xampp/htdocs/sistema_asistencia/fingerprint-agent/agent.py 2>&1"
 
-:: Si el agente termina, mostrar mensaje
+:: Si el agente termina, reiniciar
 echo.
-echo  [!] El escaner se detuvo.
-echo      Presione cualquier tecla para reiniciar
-echo      o cierre esta ventana.
-pause >nul
-goto :retry_usb
-
-:retry_usb
-echo  [2/3] Reintentando conexion del escaner...
-"C:\Program Files\usbipd-win\usbipd.exe" attach --wsl --busid 1-1 --auto-attach 2>nul
-timeout /t 2 /nobreak >nul
-goto :start_agent
-
-:start_agent
-echo  [3/3] Reiniciando escaner...
-wsl -d Ubuntu -u root -- bash -c "PYTHONUNBUFFERED=1 python3 /mnt/c/xampp/htdocs/sistema_asistencia/fingerprint-agent/agent.py 2>&1"
+echo  [!] El escaner se detuvo. Reiniciando en 3 seg...
+timeout /t 3 /nobreak >nul
 goto :retry_usb

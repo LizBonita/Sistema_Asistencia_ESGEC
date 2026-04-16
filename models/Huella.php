@@ -11,6 +11,7 @@ class Huella {
     public $dedo;
     public $template_data;
     public $imagen_path;
+    public $imagen_base64;
     public $fecha_registro;
     public $activo;
 
@@ -24,11 +25,12 @@ class Huella {
     // Registrar una nueva huella
     public function create(){
         $query = "INSERT INTO " . $this->table_name . " 
-                  (maestro_id, dedo, template_data, imagen_path) 
-                  VALUES (:maestro_id, :dedo, :template_data, :imagen_path)
+                  (maestro_id, dedo, template_data, imagen_path, imagen_base64) 
+                  VALUES (:maestro_id, :dedo, :template_data, :imagen_path, :imagen_base64)
                   ON DUPLICATE KEY UPDATE 
                   template_data = VALUES(template_data),
                   imagen_path = VALUES(imagen_path),
+                  imagen_base64 = VALUES(imagen_base64),
                   fecha_registro = CURRENT_TIMESTAMP,
                   activo = 1";
 
@@ -37,6 +39,7 @@ class Huella {
         $stmt->bindParam(":dedo", $this->dedo);
         $stmt->bindParam(":template_data", $this->template_data);
         $stmt->bindParam(":imagen_path", $this->imagen_path);
+        $stmt->bindParam(":imagen_base64", $this->imagen_base64);
 
         return $stmt->execute();
     }
@@ -70,7 +73,7 @@ class Huella {
     public function listarMaestrosConEstado(){
         $query = "SELECT m.id as maestro_id, u.nombre_completo, m.tipo_contrato,
                          CASE WHEN h.id IS NOT NULL THEN 1 ELSE 0 END as tiene_huella,
-                         h.imagen_path, h.fecha_registro as fecha_huella
+                         h.imagen_path, h.imagen_base64, h.fecha_registro as fecha_huella
                   FROM maestros m
                   JOIN usuarios u ON m.usuario_id = u.id
                   LEFT JOIN " . $this->table_name . " h ON m.id = h.maestro_id AND h.activo = 1

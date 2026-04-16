@@ -130,6 +130,7 @@ const FP = {
             maestro_id: maestroId,
             template: data.template,
             imagen_path: data.imagen_path || '',
+            imagen_base64: data.imagen_base64 || '',
             dedo: dedo || 'right-index-finger',
           }),
         })

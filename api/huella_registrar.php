@@ -24,6 +24,7 @@ try {
     $maestro_id = intval($input['maestro_id'] ?? 0);
     $template = $input['template'] ?? '';
     $imagen_path = $input['imagen_path'] ?? '';
+    $imagen_base64 = $input['imagen_base64'] ?? '';
     $dedo = $input['dedo'] ?? 'right-index-finger';
 
     if ($maestro_id <= 0) {
@@ -43,6 +44,7 @@ try {
     $huella->dedo = $dedo;
     $huella->template_data = $template;
     $huella->imagen_path = $imagen_path;
+    $huella->imagen_base64 = $imagen_base64;
 
     if ($huella->create()) {
         $response["success"] = true;
