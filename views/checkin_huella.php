@@ -1,10 +1,8 @@
 <?php
 // views/checkin_huella.php
-// Vista de Check-in por Huella Dactilar
-session_start();
-$user_logged_in = isset($_SESSION['user_id']);
-$user_nombre = $user_logged_in ? ($_SESSION['user_nombre'] ?? '') : '';
-$user_rol    = $user_logged_in ? ($_SESSION['user_rol_nombre'] ?? '') : '';
+// Vista de Check-in por Huella Dactilar — Modo Kiosko
+// NO requiere login. La huella ES la autenticación.
+date_default_timezone_set('America/Mexico_City');
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -235,9 +233,9 @@ $user_rol    = $user_logged_in ? ($_SESSION['user_rol_nombre'] ?? '') : '';
 
     <div id="fp-result"></div>
 
-    <button class="btn-checkin" id="btn-checkin" onclick="startCheckIn()">
-      <i class="fas fa-fingerprint"></i> &nbsp; Registrar Asistencia
-    </button>
+    <div class="btn-checkin" id="btn-checkin" style="cursor:default">
+      <i class="fas fa-fingerprint"></i> &nbsp; Coloque su dedo en el escáner
+    </div>
 
     <a href="inicio.php" class="back-link">
       <i class="fas fa-arrow-left"></i> Volver al inicio
@@ -255,9 +253,9 @@ $user_rol    = $user_logged_in ? ($_SESSION['user_rol_nombre'] ?? '') : '';
     function updateClock() {
       const now = new Date();
       document.getElementById('clock').textContent =
-        now.toLocaleTimeString('es-MX', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+        now.toLocaleTimeString('es-MX', {hour:'2-digit',minute:'2-digit',second:'2-digit',timeZone:'America/Mexico_City'});
       document.getElementById('date').textContent =
-        now.toLocaleDateString('es-MX', {weekday:'long',year:'numeric',month:'long',day:'numeric'});
+        now.toLocaleDateString('es-MX', {weekday:'long',year:'numeric',month:'long',day:'numeric',timeZone:'America/Mexico_City'});
     }
     setInterval(updateClock, 1000);
     updateClock();
@@ -278,33 +276,76 @@ $user_rol    = $user_logged_in ? ($_SESSION['user_rol_nombre'] ?? '') : '';
       icon.className = 'scanner-icon ' + (state || 'default');
     }
 
-    // Iniciar check-in
-    function startCheckIn() {
+    // ══════════ MODO KIOSKO: Auto-scan continuo ══════════
+    let scanning = false;
+
+    function startAutoScan() {
+      if (scanning) return;
+      scanning = true;
+
       const btn = document.getElementById('btn-checkin');
-      btn.disabled = true;
-      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> &nbsp; Escaneando...';
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> &nbsp; Esperando huella...';
+      btn.style.background = 'linear-gradient(135deg, #0E4D92, #009B48)';
       setScannerState('scanning');
 
-      // Ocultar imagen anterior
       document.getElementById('fp-image').style.display = 'none';
       document.getElementById('fp-result').innerHTML = '';
+      document.getElementById('fp-status').innerHTML = '<span style="color:#0E4D92">Coloque su dedo en el escáner</span>';
 
       FP.checkIn((result) => {
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fas fa-fingerprint"></i> &nbsp; Registrar Asistencia';
+        scanning = false;
 
         if (result.match && result.attendance && result.attendance.success) {
           setScannerState('success');
+          btn.innerHTML = '<i class="fas fa-check"></i> &nbsp; ' + (result.attendance.nombre || 'Registrado');
+          btn.style.background = '#009B48';
+
+          // Mostrar nombre grande
+          document.getElementById('fp-result').innerHTML = `
+            <div style="font-size:20px;font-weight:700;color:#0A3A6F;margin:8px 0">
+              ${result.attendance.nombre || 'Maestro'}
+            </div>
+            <div style="font-size:16px;color:${result.attendance.tipo === 'entrada' ? '#009B48' : '#0E4D92'};font-weight:500">
+              ${result.attendance.tipo === 'entrada' ? '🟢 ENTRADA' : '🔵 SALIDA'} registrada — ${result.attendance.hora || ''}
+            </div>
+          `;
+
           addToHistory(result.attendance);
+
+          // Auto-reiniciar después de 4 segundos
+          setTimeout(() => {
+            resetAndScan();
+          }, 4000);
+
         } else if (result.match === false) {
           setScannerState('error');
-        } else {
-          setScannerState('');
-        }
+          btn.innerHTML = '<i class="fas fa-times"></i> &nbsp; Huella no reconocida';
+          btn.style.background = '#e53935';
 
-        // Re-habilitar después de 3 segundos
-        setTimeout(() => setScannerState(''), 5000);
+          // Reiniciar después de 3 segundos
+          setTimeout(() => {
+            resetAndScan();
+          }, 3000);
+
+        } else {
+          // Error de conexión u otro
+          setTimeout(() => {
+            resetAndScan();
+          }, 3000);
+        }
       });
+    }
+
+    function resetAndScan() {
+      setScannerState('');
+      const btn = document.getElementById('btn-checkin');
+      btn.innerHTML = '<i class="fas fa-fingerprint"></i> &nbsp; Coloque su dedo en el escáner';
+      btn.style.background = 'linear-gradient(135deg, #0E4D92, #009B48)';
+      document.getElementById('fp-result').innerHTML = '';
+      document.getElementById('fp-image').style.display = 'none';
+
+      // Esperar 1 segundo y volver a escanear
+      setTimeout(() => startAutoScan(), 1000);
     }
 
     // Historial de registros en la sesión
@@ -314,7 +355,7 @@ $user_rol    = $user_logged_in ? ($_SESSION['user_rol_nombre'] ?? '') : '';
       const section = document.getElementById('history-section');
       const list = document.getElementById('history-list');
       section.style.display = 'block';
-      list.innerHTML = historyItems.slice(0, 5).map(h => `
+      list.innerHTML = historyItems.slice(0, 8).map(h => `
         <div class="history-item">
           <span class="dot ${h.tipo}"></span>
           <strong>${h.nombre || 'Maestro'}</strong>
@@ -323,8 +364,11 @@ $user_rol    = $user_logged_in ? ($_SESSION['user_rol_nombre'] ?? '') : '';
       `).join('');
     }
 
-    // Conectar al cargar
-    FP.connect();
+    // ══════════ ARRANQUE AUTOMÁTICO ══════════
+    // Conectar al WebSocket y comenzar escaneo continuo
+    FP.connect(() => {
+      startAutoScan();
+    });
   </script>
 </body>
 </html>

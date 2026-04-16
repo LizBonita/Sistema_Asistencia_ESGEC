@@ -1,5 +1,6 @@
 <?php
 // ✅ LA PRIMERA LÍNEA DEBE SER ESTO EXACTAMENTE
+date_default_timezone_set('America/Mexico_City');
 header("Content-Type: application/json; charset=utf-8");
 session_start();
 ob_clean();

@@ -1,5 +1,6 @@
 <?php
 // config/database.php
+date_default_timezone_set('America/Mexico_City');
 
 class Database {
     private $host;
@@ -34,6 +35,7 @@ class Database {
             $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             // Establecer charset UTF8 para evitar problemas con acentos
             $this->conn->exec("set names utf8mb4");
+            $this->conn->exec("SET time_zone = '-06:00'");
         } catch(PDOException $exception) {
             return null;
         }
