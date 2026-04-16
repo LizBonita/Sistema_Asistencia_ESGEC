@@ -1,5 +1,6 @@
 <?php
 session_start();
+date_default_timezone_set('America/Mexico_City');
 
 if (!isset($_SESSION['user_id'])) {
     header('Location: login.php');
@@ -21,6 +22,21 @@ $asistencia = new Asistencia($db);
 $selected_date = $_GET['date'] ?? date('Y-m-d');
 $stmt = $asistencia->readByDate($selected_date);
 $asistencias = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$num = count($asistencias);
+
+// ─── FALTANTES: maestros que NO han registrado asistencia hoy ───
+$stmtFaltantes = $db->prepare("
+    SELECT u.nombre_completo, m.tipo_contrato
+    FROM maestros m
+    JOIN usuarios u ON m.usuario_id = u.id
+    WHERE m.id NOT IN (
+        SELECT maestro_id FROM asistencias WHERE fecha = ?
+    )
+    ORDER BY u.nombre_completo ASC
+");
+$stmtFaltantes->execute([$selected_date]);
+$faltantes = $stmtFaltantes->fetchAll(PDO::FETCH_ASSOC);
+$totalFaltantes = count($faltantes);
 $num = count($asistencias);
 
 function obtenerIniciales(string $nombre): string
@@ -57,11 +73,15 @@ function claseEstado(?string $estado): string
 {
     $estado = mb_strtolower(trim((string)$estado), 'UTF-8');
 
-    if (strpos($estado, 'puntual') !== false) {
+    if (strpos($estado, 'puntual') !== false || strpos($estado, 'a tiempo') !== false) {
         return 'estado-puntual';
     }
 
     if (strpos($estado, 'retraso') !== false || strpos($estado, 'retardo') !== false) {
+        return 'estado-retraso';
+    }
+
+    if (strpos($estado, 'salida temprana') !== false) {
         return 'estado-retraso';
     }
 
@@ -72,7 +92,7 @@ function iconoEstado(?string $estado): string
 {
     $estado = mb_strtolower(trim((string)$estado), 'UTF-8');
 
-    if (strpos($estado, 'puntual') !== false) {
+    if (strpos($estado, 'puntual') !== false || strpos($estado, 'a tiempo') !== false) {
         return 'check-circle';
     }
 
@@ -90,7 +110,7 @@ $totalFaltas = 0;
 foreach ($asistencias as $registro) {
     $estadoEntrada = mb_strtolower(trim((string)($registro['estado_entrada'] ?? '')), 'UTF-8');
 
-    if (strpos($estadoEntrada, 'puntual') !== false) {
+    if (strpos($estadoEntrada, 'puntual') !== false || strpos($estadoEntrada, 'a tiempo') !== false) {
         $totalPuntuales++;
     } elseif (strpos($estadoEntrada, 'retraso') !== false || strpos($estadoEntrada, 'retardo') !== false) {
         $totalRetrasos++;
@@ -1022,21 +1042,48 @@ $fechaBonita = formatearFechaBonita($selected_date);
                             <small>Puntuales</small>
                             <strong><?php echo (int)$totalPuntuales; ?></strong>
                         </div>
-                        <div class="summary-icon">
+                        <div class="summary-icon" style="color:var(--color-success)">
                             <i class="fa-solid fa-check-circle"></i>
                         </div>
                     </div>
 
                     <div class="summary-item">
                         <div class="summary-info">
-                            <small>Retrasos / faltas</small>
-                            <strong><?php echo (int)($totalRetrasos + $totalFaltas); ?></strong>
+                            <small>Con retraso</small>
+                            <strong><?php echo (int)$totalRetrasos; ?></strong>
                         </div>
-                        <div class="summary-icon">
-                            <i class="fa-solid fa-triangle-exclamation"></i>
+                        <div class="summary-icon" style="color:var(--color-warning)">
+                            <i class="fa-solid fa-clock"></i>
+                        </div>
+                    </div>
+
+                    <div class="summary-item" <?php if ($totalFaltantes > 0) echo 'style="background:linear-gradient(135deg,rgba(220,38,38,.08),rgba(220,38,38,.04));border:1px solid rgba(220,38,38,.2)"'; ?>>
+                        <div class="summary-info">
+                            <small>Sin registrar</small>
+                            <strong><?php echo (int)$totalFaltantes; ?></strong>
+                        </div>
+                        <div class="summary-icon" style="color:var(--color-danger)">
+                            <i class="fa-solid fa-user-xmark"></i>
                         </div>
                     </div>
                 </div>
+
+                <?php if ($totalFaltantes > 0 && $selected_date === date('Y-m-d')): ?>
+                <div style="background:linear-gradient(135deg,rgba(220,38,38,.06),rgba(245,158,11,.04));border:1px solid rgba(220,38,38,.15);border-radius:var(--radius-sm);padding:16px 20px;margin-bottom:18px">
+                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+                        <i class="fa-solid fa-user-xmark" style="color:#dc2626;font-size:18px"></i>
+                        <strong style="color:#dc2626">No han registrado asistencia hoy (<?php echo $totalFaltantes; ?>)</strong>
+                    </div>
+                    <div style="display:flex;flex-wrap:wrap;gap:8px">
+                        <?php foreach ($faltantes as $f): ?>
+                        <span style="background:rgba(220,38,38,.1);color:#991b1b;padding:5px 12px;border-radius:20px;font-size:13px;font-weight:500">
+                            <?php echo htmlspecialchars($f['nombre_completo'], ENT_QUOTES, 'UTF-8'); ?>
+                            <small style="opacity:.7">(<?php echo htmlspecialchars($f['tipo_contrato'] ?? '', ENT_QUOTES, 'UTF-8'); ?>)</small>
+                        </span>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+                <?php endif; ?>
 
                 <div class="tools-row">
                     <div class="tools-left">
@@ -1316,6 +1363,23 @@ $fechaBonita = formatearFechaBonita($selected_date);
                 });
             });
         }
+
+        // ══════════ AUTO-REFRESH cada 30s (solo para la fecha de hoy) ══════════
+        <?php if ($selected_date === date('Y-m-d')): ?>
+        let refreshTimer;
+        function startAutoRefresh() {
+            refreshTimer = setInterval(() => {
+                window.location.reload();
+            }, 30000); // 30 segundos
+        }
+        startAutoRefresh();
+
+        // Pausar refresh mientras el usuario busca
+        if (searchInput) {
+            searchInput.addEventListener('focus', () => clearInterval(refreshTimer));
+            searchInput.addEventListener('blur', () => { if (!searchInput.value) startAutoRefresh(); });
+        }
+        <?php endif; ?>
     </script>
 
 </body>
