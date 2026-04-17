@@ -123,19 +123,28 @@ const FP = {
         }
 
         // Guardar en backend PHP
+        const payload = {
+          maestro_id: maestroId,
+          template: data.template,
+          imagen_path: data.imagen_path || '',
+          imagen_base64: data.imagen_base64 || '',
+          dedo: dedo || 'right-index-finger',
+        };
+        console.log('[FP] Enviando a PHP:', {
+          maestro_id: payload.maestro_id,
+          template_len: payload.template.length,
+          imagen_path: payload.imagen_path,
+          imagen_base64_len: payload.imagen_base64.length,
+        });
+
         fetch(this.baseUrl + 'api/huella_registrar.php', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            maestro_id: maestroId,
-            template: data.template,
-            imagen_path: data.imagen_path || '',
-            imagen_base64: data.imagen_base64 || '',
-            dedo: dedo || 'right-index-finger',
-          }),
+          body: JSON.stringify(payload),
         })
           .then(r => r.json())
           .then(phpResult => {
+            console.log('[FP] Respuesta PHP:', phpResult);
             if (callback) callback({ ...data, saved: phpResult.success });
           })
           .catch(err => {
