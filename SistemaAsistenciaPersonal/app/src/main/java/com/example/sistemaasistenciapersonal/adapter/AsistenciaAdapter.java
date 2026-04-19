@@ -30,7 +30,7 @@ public class AsistenciaAdapter extends RecyclerView.Adapter<AsistenciaAdapter.Vi
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Asistencia a = lista.get(position);
 
-        // Mostrar nombre del maestro en vez de ID
+        // Nombre del maestro
         String nombre = (a.nombre_maestro != null && !a.nombre_maestro.isEmpty())
                 ? a.nombre_maestro : "Maestro #" + a.maestro_id;
         holder.tvMaestroId.setText(nombre);
@@ -39,21 +39,22 @@ public class AsistenciaAdapter extends RecyclerView.Adapter<AsistenciaAdapter.Vi
         // Entrada
         String entrada = a.hora_entrada != null ? a.hora_entrada : "—";
         String estadoE = a.estado_entrada != null ? " (" + a.estado_entrada + ")" : "";
-        holder.tvEntrada.setText("Entrada: " + entrada + estadoE);
+        holder.tvEntrada.setText(entrada + estadoE);
 
         // Salida
         String salida = a.hora_salida != null ? a.hora_salida : "Sin registro";
         String estadoS = a.estado_salida != null ? " (" + a.estado_salida + ")" : "";
-        holder.tvSalida.setText("Salida: " + salida + estadoS);
+        holder.tvSalida.setText(salida + estadoS);
 
-        // Retraso — solo mostrar si hay
+        // Badge de estado
         if (a.minutos_retraso > 0) {
-            holder.tvRetraso.setText("⚠ Retraso: " + a.minutos_retraso + " min");
-            holder.tvRetraso.setVisibility(View.VISIBLE);
+            holder.tvRetraso.setText("⚠ " + a.minutos_retraso + " min");
+            holder.tvRetraso.setTextColor(0xFFD32F2F);
+            holder.tvRetraso.setBackgroundColor(0xFFFFEBEE);
         } else {
             holder.tvRetraso.setText("✓ Puntual");
             holder.tvRetraso.setTextColor(0xFF006847);
-            holder.tvRetraso.setVisibility(View.VISIBLE);
+            holder.tvRetraso.setBackgroundColor(0xFFE8F5E9);
         }
     }
 

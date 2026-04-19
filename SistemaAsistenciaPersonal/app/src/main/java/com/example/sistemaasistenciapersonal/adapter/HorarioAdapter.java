@@ -35,8 +35,8 @@ public class HorarioAdapter extends RecyclerView.Adapter<HorarioAdapter.ViewHold
         // Mostrar nombres reales en vez de IDs
         String grupo = (h.nombre_grupo != null) ? h.nombre_grupo : "Grupo #" + h.id_grupo;
         String materia = (h.nombre_materia != null) ? h.nombre_materia : "Materia #" + h.id_materia;
-        holder.tvGrupo.setText("Grupo: " + grupo);
-        holder.tvMateria.setText("Materia: " + materia);
+        holder.tvGrupo.setText(grupo);
+        holder.tvMateria.setText(materia);
     }
 
     @Override

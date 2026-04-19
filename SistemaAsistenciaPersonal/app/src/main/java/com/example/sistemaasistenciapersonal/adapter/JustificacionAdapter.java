@@ -29,10 +29,28 @@ public class JustificacionAdapter extends RecyclerView.Adapter<JustificacionAdap
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Justificacion j = lista.get(position);
-        holder.tvNombre.setText(j.nombre_maestro);
-        holder.tvMotivo.setText(j.motivo);
-        holder.tvFecha.setText("Solicitud: " + j.fecha_solicitud);
-        holder.tvEstado.setText("Estado: " + j.estado);
+        holder.tvNombre.setText(j.nombre_maestro != null ? j.nombre_maestro : "Maestro #" + j.id_maestro);
+        holder.tvMotivo.setText(j.motivo != null ? j.motivo : "Sin motivo");
+        String fechas = (j.fecha_inicio != null ? j.fecha_inicio : "") + " — " + (j.fecha_fin != null ? j.fecha_fin : "");
+        holder.tvFecha.setText(fechas);
+
+        // Badge con color según estado
+        String estado = j.estado != null ? j.estado : "pendiente";
+        holder.tvEstado.setText(estado.substring(0, 1).toUpperCase() + estado.substring(1));
+        switch (estado.toLowerCase()) {
+            case "aprobado":
+                holder.tvEstado.setTextColor(0xFF006847);
+                holder.tvEstado.setBackgroundColor(0xFFE8F5E9);
+                break;
+            case "rechazado":
+                holder.tvEstado.setTextColor(0xFFD32F2F);
+                holder.tvEstado.setBackgroundColor(0xFFFFEBEE);
+                break;
+            default: // pendiente
+                holder.tvEstado.setTextColor(0xFFE65100);
+                holder.tvEstado.setBackgroundColor(0xFFFFF3E0);
+                break;
+        }
     }
 
     @Override

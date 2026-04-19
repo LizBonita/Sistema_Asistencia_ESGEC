@@ -7,6 +7,7 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 import com.example.sistemaasistenciapersonal.ui.justificaciones.JustificacionesPendientesFragment;
+import com.example.sistemaasistenciapersonal.ui.huellas.HuellasFragment;
 import com.example.sistemaasistenciapersonal.ui.usuarios.GestionUsuariosFragment;
 import com.example.sistemaasistenciapersonal.ui.maestros.GestionMaestrosFragment;
 import com.example.sistemaasistenciapersonal.ui.materias.GestionMateriasFragment;
@@ -21,7 +22,7 @@ public class ModuleActivity extends AppCompatActivity {
 
     // Módulos que solo admin/director pueden acceder
     private static final List<String> ADMIN_ONLY_MODULES = Arrays.asList(
-            "usuarios", "maestros", "materias", "grupos"
+            "usuarios", "maestros", "materias", "grupos", "huellas"
     );
 
     @Override
@@ -82,6 +83,10 @@ public class ModuleActivity extends AppCompatActivity {
             case "justificaciones":
                 fragment = new JustificacionesPendientesFragment();
                 title = "Justificaciones Pendientes";
+                break;
+            case "huellas":
+                fragment = new HuellasFragment();
+                title = "Huellas Dactilares";
                 break;
             default:
                 Toast.makeText(this, "Módulo no reconocido: " + moduleName, Toast.LENGTH_SHORT).show();

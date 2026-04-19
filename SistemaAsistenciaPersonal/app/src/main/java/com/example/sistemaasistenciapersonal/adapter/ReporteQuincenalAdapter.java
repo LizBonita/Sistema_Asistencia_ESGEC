@@ -12,7 +12,7 @@ import java.util.List;
 
 public class ReporteQuincenalAdapter extends RecyclerView.Adapter<ReporteQuincenalAdapter.ViewHolder> {
 
-    private List<ReporteQuincenal> lista;
+    private final List<ReporteQuincenal> lista;
 
     public ReporteQuincenalAdapter(List<ReporteQuincenal> lista) {
         this.lista = lista;
@@ -29,10 +29,11 @@ public class ReporteQuincenalAdapter extends RecyclerView.Adapter<ReporteQuincen
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         ReporteQuincenal r = lista.get(position);
-        holder.tvNombre.setText(r.nombre_maestro);
-        holder.tvRetardos.setText("Retardos: " + r.retardos);
-        holder.tvMinutos.setText("Minutos: " + r.minutos_tardanza);
-        holder.tvAusencias.setText("Ausencias: " + r.ausencias);
+        holder.tvNombreMaestro.setText(r.nombre_maestro != null ? r.nombre_maestro : "—");
+        holder.tvContrato.setText(r.tipo_contrato != null ? r.tipo_contrato : "");
+        holder.tvRetardos.setText(String.valueOf(r.retardos));
+        holder.tvMinutos.setText(String.valueOf(r.minutos_tardanza));
+        holder.tvAusencias.setText(String.valueOf(r.ausencias));
     }
 
     @Override
@@ -41,11 +42,12 @@ public class ReporteQuincenalAdapter extends RecyclerView.Adapter<ReporteQuincen
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView tvNombre, tvRetardos, tvMinutos, tvAusencias;
+        TextView tvNombreMaestro, tvContrato, tvRetardos, tvMinutos, tvAusencias;
 
         ViewHolder(View itemView) {
             super(itemView);
-            tvNombre = itemView.findViewById(R.id.tvNombre);
+            tvNombreMaestro = itemView.findViewById(R.id.tvNombreMaestro);
+            tvContrato = itemView.findViewById(R.id.tvContrato);
             tvRetardos = itemView.findViewById(R.id.tvRetardos);
             tvMinutos = itemView.findViewById(R.id.tvMinutos);
             tvAusencias = itemView.findViewById(R.id.tvAusencias);

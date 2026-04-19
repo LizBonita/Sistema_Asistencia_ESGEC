@@ -4,11 +4,14 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
+import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import com.example.sistemaasistenciapersonal.ApiInterface;
 import com.example.sistemaasistenciapersonal.ApiService;
 import com.example.sistemaasistenciapersonal.R;
@@ -23,6 +26,8 @@ import retrofit2.Response;
 public class GestionGruposFragment extends Fragment {
 
     private RecyclerView rvGrupos;
+    private SwipeRefreshLayout swipeRefresh;
+    private TextView tvConteo;
     private GrupoAdapter adapter;
     private List<Grupo> lista = new ArrayList<>();
 
@@ -37,28 +42,43 @@ public class GestionGruposFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         rvGrupos = view.findViewById(R.id.rvGrupos);
+        swipeRefresh = view.findViewById(R.id.swipeRefresh);
+        tvConteo = view.findViewById(R.id.tvConteo);
+
         rvGrupos.setLayoutManager(new LinearLayoutManager(getContext()));
         adapter = new GrupoAdapter(lista);
         rvGrupos.setAdapter(adapter);
+
+        if (swipeRefresh != null) {
+            swipeRefresh.setColorSchemeColors(0xFF163B73, 0xFF006847);
+            swipeRefresh.setOnRefreshListener(this::cargarGrupos);
+        }
 
         cargarGrupos();
     }
 
     private void cargarGrupos() {
+        if (swipeRefresh != null) swipeRefresh.setRefreshing(true);
+
         ApiService.getClient().create(ApiInterface.class)
                 .getGrupos()
                 .enqueue(new Callback<List<Grupo>>() {
                     @Override
                     public void onResponse(@NonNull Call<List<Grupo>> call, @NonNull Response<List<Grupo>> response) {
+                        if (swipeRefresh != null) swipeRefresh.setRefreshing(false);
                         if (response.isSuccessful() && response.body() != null) {
                             lista.clear();
                             lista.addAll(response.body());
                             adapter.notifyDataSetChanged();
+                            if (tvConteo != null) tvConteo.setText(lista.size() + " grupos registrados en la institución");
                         }
                     }
 
                     @Override
                     public void onFailure(@NonNull Call<List<Grupo>> call, @NonNull Throwable t) {
+                        if (swipeRefresh != null) swipeRefresh.setRefreshing(false);
+                        if (tvConteo != null) tvConteo.setText("Sin conexión al servidor");
+                        Toast.makeText(getContext(), "Error de conexión", Toast.LENGTH_SHORT).show();
                     }
                 });
     }

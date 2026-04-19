@@ -1,23 +1,98 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="16dp">
+    android:background="#EEF4FB">
 
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Gestión de Horarios"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        android:gravity="center"
-        android:layout_marginBottom="16dp" />
+    <View android:id="@+id/topBand" android:layout_width="0dp" android:layout_height="150dp"
+        android:background="#163B73" app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent" app:layout_constraintEnd_toEndOf="parent" />
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rvHorarios"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1" />
+    <com.google.android.material.card.MaterialCardView android:id="@+id/cardHeader"
+        android:layout_width="0dp" android:layout_height="wrap_content"
+        android:layout_marginStart="20dp" android:layout_marginTop="26dp" android:layout_marginEnd="20dp"
+        app:cardBackgroundColor="#FFFFFF" app:cardCornerRadius="30dp" app:cardElevation="10dp"
+        app:strokeColor="#DCE7F3" app:strokeWidth="1dp"
+        app:layout_constraintTop_toTopOf="parent" app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
 
-</LinearLayout>
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:background="#0F2E5C" android:gravity="center_vertical"
+                android:paddingHorizontal="18dp" android:paddingVertical="10dp">
+                <ImageView android:layout_width="18dp" android:layout_height="18dp"
+                    android:src="@drawable/ic_calendar" app:tint="#FFFFFF" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp" android:text="Planificación Académica"
+                    android:textColor="#FFFFFF" android:textSize="13sp" android:textStyle="bold" />
+            </LinearLayout>
+
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:gravity="center_vertical" android:padding="20dp">
+                <FrameLayout android:layout_width="58dp" android:layout_height="58dp" android:background="#EAF2FF">
+                    <ImageView android:layout_width="28dp" android:layout_height="28dp"
+                        android:layout_gravity="center" android:src="@drawable/ic_calendar" app:tint="#163B73" />
+                </FrameLayout>
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                    android:layout_weight="1" android:layout_marginStart="14dp" android:orientation="vertical">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="Gestión de Horarios" android:textColor="#163B73"
+                        android:textSize="22sp" android:textStyle="bold" />
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp" android:text="Horarios por grupo, materia y día"
+                        android:textColor="#64748B" android:textSize="13sp" />
+                </LinearLayout>
+            </LinearLayout>
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+    <com.google.android.material.card.MaterialCardView android:id="@+id/cardInfo"
+        android:layout_width="0dp" android:layout_height="wrap_content"
+        android:layout_marginStart="20dp" android:layout_marginTop="14dp" android:layout_marginEnd="20dp"
+        app:cardBackgroundColor="#EAF8F2" app:cardCornerRadius="22dp" app:cardElevation="0dp"
+        app:strokeColor="#D4ECDD" app:strokeWidth="1dp"
+        app:layout_constraintTop_toBottomOf="@id/cardHeader" app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:gravity="center_vertical" android:paddingHorizontal="16dp" android:paddingVertical="14dp">
+            <ImageView android:layout_width="20dp" android:layout_height="20dp"
+                android:src="@android:drawable/ic_dialog_info" app:tint="#0A7A53" />
+            <TextView android:id="@+id/tvConteo" android:layout_width="0dp" android:layout_height="wrap_content"
+                android:layout_marginStart="10dp" android:layout_weight="1"
+                android:text="Cargando horarios..." android:textColor="#23543F"
+                android:textSize="13sp" android:textStyle="bold" />
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="0dp" android:layout_height="0dp"
+        android:layout_marginStart="20dp" android:layout_marginTop="14dp"
+        android:layout_marginEnd="20dp" android:layout_marginBottom="20dp"
+        app:cardBackgroundColor="#FFFFFF" app:cardCornerRadius="28dp" app:cardElevation="10dp"
+        app:strokeColor="#E3EDF7" app:strokeWidth="1dp"
+        app:layout_constraintTop_toBottomOf="@id/cardInfo" app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent" app:layout_constraintEnd_toEndOf="parent">
+        <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:background="#F7FAFD" android:gravity="center_vertical"
+                android:paddingHorizontal="16dp" android:paddingVertical="12dp">
+                <ImageView android:layout_width="18dp" android:layout_height="18dp"
+                    android:src="@drawable/ic_calendar" app:tint="#163B73" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp" android:text="Carga horaria"
+                    android:textColor="#163B73" android:textSize="13sp" android:textStyle="bold" />
+            </LinearLayout>
+            <androidx.swiperefreshlayout.widget.SwipeRefreshLayout android:id="@+id/swipeRefresh"
+                android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1">
+                <androidx.recyclerview.widget.RecyclerView android:id="@+id/rvHorarios"
+                    android:layout_width="match_parent" android:layout_height="match_parent"
+                    android:clipToPadding="false" android:paddingHorizontal="12dp"
+                    android:paddingTop="12dp" android:paddingBottom="16dp" android:scrollbars="vertical" />
+            </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+</androidx.constraintlayout.widget.ConstraintLayout>

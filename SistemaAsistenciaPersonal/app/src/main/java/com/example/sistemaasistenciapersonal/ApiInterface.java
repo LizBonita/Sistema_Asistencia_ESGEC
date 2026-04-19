@@ -94,4 +94,18 @@ public interface ApiInterface {
             @Query("inicio") String inicio,
             @Query("fin") String fin
     );
+    // ===========================
+    // === JUSTIFICACIONES ===
+    // ===========================
+    @GET("get_justificaciones_pendientes.php")
+    Call<List<Justificacion>> getJustificacionesPendientes(@Query("maestro_id") int maestroId);
+
+    @GET("get_justificaciones_pendientes.php")
+    Call<List<Justificacion>> getAllJustificacionesPendientes();
+
+    // ===========================
+    // === HUELLAS DACTILARES ===
+    // ===========================
+    @GET("huella_listar.php")
+    Call<HuellaListResponse> getHuellas();
 }

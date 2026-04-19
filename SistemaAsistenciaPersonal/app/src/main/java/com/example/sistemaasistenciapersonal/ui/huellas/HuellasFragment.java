@@ -1,4 +1,4 @@
-package com.example.sistemaasistenciapersonal.ui.materias;
+package com.example.sistemaasistenciapersonal.ui.huellas;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -15,67 +15,78 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import com.example.sistemaasistenciapersonal.ApiInterface;
 import com.example.sistemaasistenciapersonal.ApiService;
 import com.example.sistemaasistenciapersonal.R;
-import com.example.sistemaasistenciapersonal.adapter.MateriaAdapter;
-import com.example.sistemaasistenciapersonal.model.Materia;
+import com.example.sistemaasistenciapersonal.adapter.HuellaAdapter;
+import com.example.sistemaasistenciapersonal.model.HuellaInfo;
+import com.example.sistemaasistenciapersonal.model.HuellaListResponse;
 import java.util.ArrayList;
 import java.util.List;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class GestionMateriasFragment extends Fragment {
+public class HuellasFragment extends Fragment {
 
-    private RecyclerView rvMaterias;
+    private RecyclerView rvHuellas;
     private SwipeRefreshLayout swipeRefresh;
     private TextView tvConteo;
-    private MateriaAdapter adapter;
-    private List<Materia> lista = new ArrayList<>();
+    private HuellaAdapter adapter;
+    private List<HuellaInfo> lista = new ArrayList<>();
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_gestion_materias, container, false);
+        return inflater.inflate(R.layout.fragment_huellas, container, false);
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        rvMaterias = view.findViewById(R.id.rvMaterias);
+        rvHuellas = view.findViewById(R.id.rvHuellas);
         swipeRefresh = view.findViewById(R.id.swipeRefresh);
         tvConteo = view.findViewById(R.id.tvConteo);
 
-        rvMaterias.setLayoutManager(new LinearLayoutManager(getContext()));
-        adapter = new MateriaAdapter(lista);
-        rvMaterias.setAdapter(adapter);
+        rvHuellas.setLayoutManager(new LinearLayoutManager(getContext()));
+        adapter = new HuellaAdapter(lista);
+        rvHuellas.setAdapter(adapter);
 
         if (swipeRefresh != null) {
-            swipeRefresh.setColorSchemeColors(0xFF163B73, 0xFF006847);
-            swipeRefresh.setOnRefreshListener(this::cargarMaterias);
+            swipeRefresh.setColorSchemeColors(0xFF163B73, 0xFFE65100);
+            swipeRefresh.setOnRefreshListener(this::cargarHuellas);
         }
 
-        cargarMaterias();
+        cargarHuellas();
     }
 
-    private void cargarMaterias() {
+    private void cargarHuellas() {
         if (swipeRefresh != null) swipeRefresh.setRefreshing(true);
 
         ApiService.getClient().create(ApiInterface.class)
-                .getMaterias()
-                .enqueue(new Callback<List<Materia>>() {
+                .getHuellas()
+                .enqueue(new Callback<HuellaListResponse>() {
                     @Override
-                    public void onResponse(@NonNull Call<List<Materia>> call, @NonNull Response<List<Materia>> response) {
+                    public void onResponse(@NonNull Call<HuellaListResponse> call, @NonNull Response<HuellaListResponse> response) {
                         if (swipeRefresh != null) swipeRefresh.setRefreshing(false);
-                        if (response.isSuccessful() && response.body() != null) {
+                        if (response.isSuccessful() && response.body() != null && response.body().success) {
                             lista.clear();
-                            lista.addAll(response.body());
+                            lista.addAll(response.body().maestros);
                             adapter.notifyDataSetChanged();
-                            if (tvConteo != null) tvConteo.setText(lista.size() + " materias registradas en el plan de estudios");
+
+                            // Contar registradas vs pendientes
+                            int registradas = 0;
+                            for (HuellaInfo h : lista) {
+                                if (h.tiene_huella == 1) registradas++;
+                            }
+                            int pendientes = lista.size() - registradas;
+
+                            if (tvConteo != null) {
+                                tvConteo.setText(registradas + " huellas registradas · " + pendientes + " pendientes");
+                            }
                         }
                     }
 
                     @Override
-                    public void onFailure(@NonNull Call<List<Materia>> call, @NonNull Throwable t) {
+                    public void onFailure(@NonNull Call<HuellaListResponse> call, @NonNull Throwable t) {
                         if (swipeRefresh != null) swipeRefresh.setRefreshing(false);
                         if (tvConteo != null) tvConteo.setText("Sin conexión al servidor");
                         Toast.makeText(getContext(), "Error de conexión", Toast.LENGTH_SHORT).show();

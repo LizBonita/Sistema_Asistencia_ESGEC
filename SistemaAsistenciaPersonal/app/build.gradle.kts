@@ -50,6 +50,9 @@ dependencies {
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
 
+    // Image Loading (for fingerprint images)
+    implementation("com.squareup.picasso:picasso:2.8")
+
     // Dimensiones responsivas
     implementation("com.intuit.sdp:sdp-android:1.1.0")
     implementation("com.intuit.ssp:ssp-android:1.1.0")

@@ -371,7 +371,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:columnCount="2"
-                android:rowCount="4"
+                android:rowCount="5"
                 android:alignmentMode="alignMargins"
                 android:columnOrderPreserved="false"
                 android:useDefaultMargins="true">
@@ -680,6 +680,45 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Justificaciones"
+                            android:textSize="14sp"
+                            android:textStyle="bold"
+                            android:textColor="#002B7F"
+                            android:layout_marginTop="8dp"
+                            android:gravity="center" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- Módulo 9: Huellas Dactilares -->
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="0dp"
+                    android:layout_height="130dp"
+                    android:layout_columnWeight="1"
+                    android:layout_rowWeight="1"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="6dp"
+                    app:cardBackgroundColor="#FFFFFF"
+                    android:foreground="?android:attr/selectableItemBackground"
+                    android:onClick="onModuleClick"
+                    android:tag="huellas">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:padding="16dp">
+
+                        <ImageView
+                            android:layout_width="48dp"
+                            android:layout_height="48dp"
+                            android:src="@drawable/ic_fingerprint"
+                            android:contentDescription="Huellas"
+                            app:tint="#E65100" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Huellas"
                             android:textSize="14sp"
                             android:textStyle="bold"
                             android:textColor="#002B7F"

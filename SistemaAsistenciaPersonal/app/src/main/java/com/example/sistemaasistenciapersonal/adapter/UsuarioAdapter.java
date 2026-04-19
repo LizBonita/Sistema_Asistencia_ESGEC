@@ -40,7 +40,22 @@ public class UsuarioAdapter extends RecyclerView.Adapter<UsuarioAdapter.ViewHold
         Usuario u = lista.get(position);
         holder.tvNombre.setText(u.nombre_completo);
         holder.tvUsuario.setText("@" + u.usuario);
-        holder.tvRol.setText("Rol ID: " + u.rol_id);
+
+        // Traducir rol_id a nombre legible
+        String rolTexto;
+        switch (u.rol_id) {
+            case 1: rolTexto = "Director"; break;
+            case 2: rolTexto = "Subdirector"; break;
+            case 3: rolTexto = "Maestro"; break;
+            case 4: rolTexto = "Admin"; break;
+            default: rolTexto = "Rol " + u.rol_id;
+        }
+        holder.tvRol.setText(rolTexto);
+
+        // Inicial del avatar
+        if (holder.tvInicial != null && u.nombre_completo != null && !u.nombre_completo.isEmpty()) {
+            holder.tvInicial.setText(String.valueOf(u.nombre_completo.charAt(0)));
+        }
 
         // 🗑️ BOTÓN ELIMINAR (CLAVE)
         holder.btnDelete.setOnClickListener(v -> {
@@ -71,7 +86,7 @@ public class UsuarioAdapter extends RecyclerView.Adapter<UsuarioAdapter.ViewHold
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView tvNombre, tvUsuario, tvRol;
+        TextView tvNombre, tvUsuario, tvRol, tvInicial;
         Button btnDelete;
 
         ViewHolder(View itemView) {
@@ -79,6 +94,7 @@ public class UsuarioAdapter extends RecyclerView.Adapter<UsuarioAdapter.ViewHold
             tvNombre = itemView.findViewById(R.id.tvNombre);
             tvUsuario = itemView.findViewById(R.id.tvUsuario);
             tvRol = itemView.findViewById(R.id.tvRol);
+            tvInicial = itemView.findViewById(R.id.tvInicial);
             btnDelete = itemView.findViewById(R.id.btnDelete);
         }
     }

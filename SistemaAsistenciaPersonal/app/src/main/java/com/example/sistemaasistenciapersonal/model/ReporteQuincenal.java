@@ -2,6 +2,7 @@ package com.example.sistemaasistenciapersonal.model;
 
 public class ReporteQuincenal {
     public String nombre_maestro;
+    public String tipo_contrato;
     public int retardos;
     public int minutos_tardanza;
     public int ausencias;

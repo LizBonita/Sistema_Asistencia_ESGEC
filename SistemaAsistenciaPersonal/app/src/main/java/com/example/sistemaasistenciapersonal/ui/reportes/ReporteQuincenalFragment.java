@@ -4,11 +4,13 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import com.example.sistemaasistenciapersonal.ApiInterface;
 import com.example.sistemaasistenciapersonal.ApiService;
 import com.example.sistemaasistenciapersonal.R;
@@ -23,6 +25,7 @@ import retrofit2.Response;
 public class ReporteQuincenalFragment extends Fragment {
 
     private RecyclerView rvReportes;
+    private SwipeRefreshLayout swipeRefresh;
     private ReporteQuincenalAdapter adapter;
     private List<ReporteQuincenal> lista = new ArrayList<>();
 
@@ -37,19 +40,29 @@ public class ReporteQuincenalFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         rvReportes = view.findViewById(R.id.rvReportes);
+        swipeRefresh = view.findViewById(R.id.swipeRefresh);
+
         rvReportes.setLayoutManager(new LinearLayoutManager(getContext()));
         adapter = new ReporteQuincenalAdapter(lista);
         rvReportes.setAdapter(adapter);
+
+        if (swipeRefresh != null) {
+            swipeRefresh.setColorSchemeColors(0xFF163B73, 0xFF006847);
+            swipeRefresh.setOnRefreshListener(this::cargarReporteQuincenal);
+        }
 
         cargarReporteQuincenal();
     }
 
     private void cargarReporteQuincenal() {
+        if (swipeRefresh != null) swipeRefresh.setRefreshing(true);
+
         ApiService.getClient().create(ApiInterface.class)
                 .getReporteQuincenal()
                 .enqueue(new Callback<List<ReporteQuincenal>>() {
                     @Override
                     public void onResponse(@NonNull Call<List<ReporteQuincenal>> call, @NonNull Response<List<ReporteQuincenal>> response) {
+                        if (swipeRefresh != null) swipeRefresh.setRefreshing(false);
                         if (response.isSuccessful() && response.body() != null) {
                             lista.clear();
                             lista.addAll(response.body());
@@ -59,6 +72,8 @@ public class ReporteQuincenalFragment extends Fragment {
 
                     @Override
                     public void onFailure(@NonNull Call<List<ReporteQuincenal>> call, @NonNull Throwable t) {
+                        if (swipeRefresh != null) swipeRefresh.setRefreshing(false);
+                        Toast.makeText(getContext(), "Error de conexión", Toast.LENGTH_SHORT).show();
                     }
                 });
     }
