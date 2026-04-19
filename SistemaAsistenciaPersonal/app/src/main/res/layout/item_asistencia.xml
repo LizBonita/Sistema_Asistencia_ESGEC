@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="4dp"
+    android:layout_marginVertical="4dp"
+    android:layout_marginHorizontal="8dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <TextView
+            android:id="@+id/tvMaestroId"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Maestro ID: 1"
+            android:textSize="14sp"
+            android:textStyle="bold"
+        android:textColor="#1A237E" />
+
+        <TextView
+            android:id="@+id/tvFecha"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Fecha: 2026-02-18"
+            android:textSize="13sp"
+            android:textColor="#546E7A"
+            android:layout_marginTop="4dp" />
+
+        <TextView
+            android:id="@+id/tvEntrada"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Entrada: 07:30:00 (presente)"
+            android:textSize="13sp"
+            android:textColor="#006847"
+            android:layout_marginTop="4dp" />
+
+        <TextView
+            android:id="@+id/tvSalida"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Salida: 14:00:00 (presente)"
+            android:textSize="13sp"
+            android:textColor="#006847"
+            android:layout_marginTop="4dp" />
+
+        <TextView
+            android:id="@+id/tvRetraso"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Retraso: 0 min"
+            android:textSize="13sp"
+            android:textColor="#D32F2F"
+            android:layout_marginTop="6dp"
+            android:gravity="end" />
+
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>

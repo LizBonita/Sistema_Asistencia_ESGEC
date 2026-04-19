@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="linearLayoutLogos" type="id" />
+    <item name="cardLogin" type="id" />
+    <item name="tvRetraso" type="id" />
+</resources>

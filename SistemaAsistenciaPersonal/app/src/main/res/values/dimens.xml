@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Responsive units -->
+    <dimen name="responsive_text_small">14sp</dimen>
+    <dimen name="responsive_text_medium">18sp</dimen>
+    <dimen name="responsive_text_large">24sp</dimen>
+    <dimen name="card_radius">16dp</dimen>
+    <dimen name="button_height">56dp</dimen>
+</resources>

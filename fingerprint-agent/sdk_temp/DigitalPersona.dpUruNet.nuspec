@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
+  <metadata>
+    <id>DigitalPersona.dpUruNet</id>
+    <version>3.4.4.127</version>
+    <authors>DigitalPersona, Inc.</authors>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <license type="file">EULASDK.md</license>
+    <licenseUrl>https://aka.ms/deprecateLicenseUrl</licenseUrl>
+    <projectUrl>https://www.hidglobal.com/products/software/digitalpersona/digitalpersona</projectUrl>
+    <description>Assemblies Required for Digital persona fingerprint readers. This package is intendend for use in my company. I am not the developer of this assemblies.</description>
+    <releaseNotes>DigitalPersona U.are.U SDK for Windows Version 3.0.0 February 24, 2020.</releaseNotes>
+    <copyright>(c) 1996-2020 DigitalPersona, Inc. All Rights Reserved.</copyright>
+    <tags>DigitalPersona.dpUruNet</tags>
+    <dependencies>
+      <group targetFramework=".NETStandard2.1" />
+    </dependencies>
+  </metadata>
+</package>

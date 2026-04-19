@@ -1,11 +1,19 @@
 <?php
-header("Content-Type: application/json");
+// api/get_materias.php
+header("Content-Type: application/json; charset=utf-8");
 header("Access-Control-Allow-Origin: *");
 
-$pdo = new PDO("mysql:host=localhost;dbname=sistema_asistencia;charset=utf8", 'root', '');
-$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+require_once __DIR__ . '/../config/database.php';
 
-$stmt = $pdo->query("SELECT id, nombre, clave FROM materias");
-$result = $stmt->fetchAll(PDO::FETCH_ASSOC);
-echo json_encode($result);
-?>
+try {
+    $db = (new Database())->getConnection();
+    if (!$db) { throw new Exception("Error de conexión a BD"); }
+
+    $stmt = $db->query("SELECT id, nombre, clave FROM materias ORDER BY nombre ASC");
+    $materias = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    echo json_encode($materias, JSON_UNESCAPED_UNICODE);
+
+} catch (Exception $e) {
+    echo json_encode(['error' => $e->getMessage()]);
+}
