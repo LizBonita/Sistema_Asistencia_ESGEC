@@ -74,6 +74,15 @@ public interface ApiInterface {
     @GET("get_horarios.php")
     Call<List<Horario>> getHorarios();
 
+    @GET("get_horarios.php")
+    Call<List<Horario>> getHorariosPorMaestro(@Query("maestro_id") int maestroId);
+
+    @POST("agregar_horario.php")
+    Call<ResponseGenerico> agregarHorario(@Body Horario horario);
+
+    @GET("eliminar_horario.php")
+    Call<ResponseGenerico> eliminarHorario(@Query("id") int id);
+
     // ===========================
     // === ASISTENCIAS DIARIAS ===
     // ===========================
