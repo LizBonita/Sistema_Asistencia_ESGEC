@@ -1301,7 +1301,7 @@ $user_iniciales = $user_logged_in ? obtenerIniciales($user_nombre) : '';
     }
 
     /* =========================
-       MODAL LOGIN
+       MODAL LOGIN (Huella + Reloj)
     ========================= */
     .modal{
       display:none;
@@ -1309,28 +1309,32 @@ $user_iniciales = $user_logged_in ? obtenerIniciales($user_nombre) : '';
       inset:0;
       z-index:1000;
       background: rgba(0,0,0,.55);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
       padding: 18px;
     }
     .modal-content{
-      background: rgba(255,255,255,.92);
-      margin: 10vh auto 0;
+      background: rgba(255,255,255,.96);
+      margin: 6vh auto 0;
       padding: 0;
       border: 1px solid rgba(14,77,146,.18);
-      border-radius: 22px;
+      border-radius: 26px;
       width: 92%;
-      max-width: 420px;
-      box-shadow: var(--shadow);
+      max-width: 440px;
+      box-shadow: 0 26px 70px rgba(0,0,0,.25);
       overflow:hidden;
       position:relative;
-      animation: pop .18s ease;
+      animation: pop .22s ease;
     }
-    @keyframes pop{ from{ transform: translateY(10px); opacity:.85;} to{ transform: translateY(0); opacity:1;} }
+    :root[data-theme="dark"] .modal-content{
+      background: rgba(10,14,28,.96);
+      border-color: rgba(255,255,255,.14);
+    }
+    @keyframes pop{ from{ transform: translateY(12px) scale(.97); opacity:.8;} to{ transform: translateY(0) scale(1); opacity:1;} }
     .modal-header{
       background: linear-gradient(135deg, var(--azul), var(--verde));
       color:#fff;
-      padding: 16px;
+      padding: 18px 20px;
       display:flex;
       align-items:center;
       justify-content:space-between;
@@ -1357,69 +1361,198 @@ $user_iniciales = $user_logged_in ? obtenerIniciales($user_nombre) : '';
       background: rgba(255,255,255,.14);
       border: 1px solid rgba(255,255,255,.22);
       line-height:1;
+      transition: background .18s;
     }
+    .close:hover{ background: rgba(255,255,255,.25); }
+
     .modal-body{
-      padding: 16px 16px 18px;
+      padding: 24px 20px 22px;
       background:
         radial-gradient(700px 240px at 15% 0%, rgba(0,155,72,.10), transparent 60%),
         radial-gradient(700px 240px at 85% 0%, rgba(14,77,146,.10), transparent 60%),
         linear-gradient(180deg, rgba(255,255,255,.98), rgba(255,255,255,.90));
+      text-align:center;
     }
-    .modal-body form{ display:flex; flex-direction:column; gap:12px; }
-    .modal-body label{
+    :root[data-theme="dark"] .modal-body{
+      background:
+        radial-gradient(700px 240px at 15% 0%, rgba(0,155,72,.14), transparent 60%),
+        radial-gradient(700px 240px at 85% 0%, rgba(14,77,146,.14), transparent 60%),
+        rgba(255,255,255,.03);
+    }
+
+    /* ── Reloj del modal ── */
+    .login-clock{
+      font-size: 3.2rem;
       font-weight: 900;
       color: var(--azul2);
-      display:flex;
-      align-items:center;
-      gap: 8px;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 1px;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    :root[data-theme="dark"] .login-clock{ color: #EAF0FF; }
+
+    .login-clock-seconds{
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--verde);
+      vertical-align: super;
+      margin-left: 2px;
+    }
+
+    .login-date{
+      color: var(--page-muted);
+      font-weight: 700;
       font-size: .95rem;
+      margin-bottom: 20px;
+      text-transform: capitalize;
     }
-    .modal-body input[type="text"],
-    .modal-body input[type="password"]{
-      padding: 12px 14px;
-      border: 1px solid rgba(14,77,146,.18);
-      border-radius: 14px;
-      font-size: 1rem;
-      outline:none;
-      background: rgba(255,255,255,.92);
-      transition: box-shadow .15s ease, border-color .15s ease;
-    }
-    .modal-body input:focus{ border-color: rgba(14,77,146,.35); box-shadow: var(--ring); }
 
-    .login-btn.is-loading{
-      opacity: .85;
-      cursor: not-allowed;
-      pointer-events: none;
-      filter: saturate(.95);
+    /* ── Área del escáner ── */
+    .fp-scan-area{
+      position: relative;
+      background: linear-gradient(135deg, rgba(14,77,146,.05), rgba(0,155,72,.05));
+      border: 2px dashed rgba(14,77,146,.18);
+      border-radius: 20px;
+      padding: 28px 16px 22px;
+      margin-bottom: 18px;
+      transition: all .35s ease;
+      overflow: hidden;
     }
-    .login-btn .spinner{ display:none; }
-    .login-btn.is-loading .spinner{
-      display:inline-block;
-      width: 18px;
-      height: 18px;
-      border-radius: 999px;
-      border: 2px solid rgba(255,255,255,.55);
-      border-top-color: rgba(255,255,255,1);
-      animation: spin .8s linear infinite;
+    :root[data-theme="dark"] .fp-scan-area{
+      background: rgba(255,255,255,.04);
+      border-color: rgba(255,255,255,.12);
     }
-    @keyframes spin{ to{ transform: rotate(360deg); } }
 
-    .modal-body button{
-      border:none;
-      cursor:pointer;
-      padding: 12px 14px;
+    .fp-scan-area.scanning{
+      border-color: #2196f3;
+      border-style: solid;
+      animation: scanPulse 1.8s ease-in-out infinite;
+    }
+    .fp-scan-area.success{
+      border-color: #00c853;
+      border-style: solid;
+      background: rgba(0,200,83,.06);
+    }
+    .fp-scan-area.error{
+      border-color: #f44336;
+      border-style: solid;
+      background: rgba(244,67,54,.06);
+    }
+
+    @keyframes scanPulse{
+      0%,100%{ box-shadow: 0 0 0 0 rgba(33,150,243,.2); }
+      50%{ box-shadow: 0 0 0 14px rgba(33,150,243,0); }
+    }
+
+    .fp-scan-icon{
+      font-size: 52px;
+      margin-bottom: 10px;
+      display: block;
+      transition: color .3s, transform .3s;
+    }
+    .fp-scan-icon.idle{ color: rgba(14,77,146,.28); }
+    .fp-scan-icon.scanning{ color: #2196f3; animation: fpSpin 2s linear infinite; }
+    .fp-scan-icon.success{ color: #00c853; transform: scale(1.1); }
+    .fp-scan-icon.error{ color: #f44336; }
+    :root[data-theme="dark"] .fp-scan-icon.idle{ color: rgba(234,240,255,.25); }
+
+    @keyframes fpSpin{ 0%{transform:rotate(0)} 100%{transform:rotate(360deg)} }
+
+    .fp-scan-text{
+      font-size: .95rem;
+      font-weight: 700;
+      color: var(--page-muted);
+    }
+
+    /* ── Botón principal de huella ── */
+    .btn-fingerprint{
+      width: 100%;
+      border: none;
+      cursor: pointer;
+      padding: 16px 20px;
       border-radius: 16px;
       font-weight: 900;
-      color:#fff;
-      background: linear-gradient(135deg, var(--verde), var(--azul));
-      box-shadow: 0 14px 28px rgba(0,0,0,.16);
-      transition: transform .18s ease, filter .18s ease;
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      gap: 10px;
+      font-size: 1.05rem;
+      color: #fff;
+      background: linear-gradient(135deg, var(--azul), var(--verde));
+      box-shadow: 0 14px 30px rgba(14,77,146,.22);
+      transition: transform .2s ease, filter .2s ease, box-shadow .2s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      letter-spacing: .3px;
     }
-    .modal-body button:hover{ transform: translateY(-1px); filter: brightness(1.03); }
+    .btn-fingerprint:hover:not(:disabled){
+      transform: translateY(-2px);
+      filter: brightness(1.04);
+      box-shadow: 0 18px 40px rgba(14,77,146,.28);
+    }
+    .btn-fingerprint:active:not(:disabled){ transform: translateY(0); }
+    .btn-fingerprint:disabled{
+      opacity: .7;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .btn-fingerprint i{ font-size: 1.3rem; }
+
+    /* ── Resultado / feedback ── */
+    .fp-result-box{
+      margin-top: 14px;
+      padding: 14px;
+      border-radius: 16px;
+      font-weight: 800;
+      font-size: .95rem;
+      animation: fadeInUp .3s ease;
+      display: none;
+    }
+    .fp-result-box.show{ display: block; }
+    .fp-result-box.success{
+      color: #0A5C2B;
+      background: rgba(0,200,83,.10);
+      border: 1px solid rgba(0,155,72,.22);
+    }
+    .fp-result-box.error{
+      color: #7f0e1c;
+      background: rgba(255,234,236,.90);
+      border: 1px solid rgba(127,14,28,.18);
+    }
+    :root[data-theme="dark"] .fp-result-box.success{
+      color: #4ADE80;
+      background: rgba(0,200,83,.12);
+      border-color: rgba(0,200,83,.25);
+    }
+    :root[data-theme="dark"] .fp-result-box.error{
+      color: #FCA5A5;
+      background: rgba(244,67,54,.12);
+      border-color: rgba(244,67,54,.25);
+    }
+
+    @keyframes fadeInUp{
+      from{ opacity:0; transform: translateY(8px); }
+      to{ opacity:1; transform: translateY(0); }
+    }
+
+    .fp-welcome-name{
+      font-size: 1.3rem;
+      font-weight: 900;
+      color: var(--azul2);
+      margin: 6px 0 2px;
+    }
+    :root[data-theme="dark"] .fp-welcome-name{ color: #EAF0FF; }
+
+    .fp-welcome-tipo{
+      font-size: 1rem;
+      font-weight: 700;
+    }
+
+    .fp-hint{
+      color: var(--page-muted);
+      font-size: .82rem;
+      font-weight: 600;
+      margin-top: 10px;
+    }
 
     .modal-message{
       margin-top: 10px;
@@ -1663,7 +1796,7 @@ $user_iniciales = $user_logged_in ? obtenerIniciales($user_nombre) : '';
         <?php else: ?>
 
           <a href="#loginModal" class="btn btn-login-modal" id="openLoginModal" title="Alt+L">
-            <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
+            <i class="fas fa-fingerprint"></i> Registrar Asistencia
           </a>
 
         <?php endif; ?>
@@ -1672,48 +1805,40 @@ $user_iniciales = $user_logged_in ? obtenerIniciales($user_nombre) : '';
     </div>
   </header>
 
-  <!-- MODAL LOGIN -->
+  <!-- MODAL LOGIN (Huella + Reloj) -->
   <div id="loginModal" class="modal">
     <div class="modal-content">
       <div class="modal-header">
-        <h2><i class="fas fa-sign-in-alt"></i> Iniciar Sesión</h2>
+        <h2><i class="fas fa-fingerprint"></i> Registro de Asistencia</h2>
         <span class="close">&times;</span>
       </div>
 
       <div class="modal-body">
-        <form id="loginForm" method="POST" action="../login_ajax.php">
-          <input type="hidden" name="action" value="login">
+        <!-- Reloj en tiempo real -->
+        <div class="login-clock" id="loginClock">
+          <span id="loginClockHM">--:--</span><span class="login-clock-seconds" id="loginClockSec">00</span>
+        </div>
+        <div class="login-date" id="loginDate">cargando fecha...</div>
 
-          <label for="usuario_modal"><i class="fas fa-user"></i> Usuario:</label>
-          <input type="text" id="usuario_modal" name="usuario" required>
-
-          <label for="password_modal"><i class="fas fa-lock"></i> Contraseña:</label>
-          <input type="password" id="password_modal" name="password" required>
-
-          <button type="submit" class="login-btn" id="loginBtn">
-            <span class="spinner"></span>
-            <i class="fas fa-sign-in-alt"></i>
-            <span class="txt">Entrar</span>
-          </button>
-        </form>
-
-        <div style="display:flex;align-items:center;margin:18px 0 10px;gap:12px">
-          <hr style="flex:1;border:none;border-top:1px solid #d0d7de">
-          <span style="color:#5f6b7a;font-size:13px">ó</span>
-          <hr style="flex:1;border:none;border-top:1px solid #d0d7de">
+        <!-- Área del escáner -->
+        <div class="fp-scan-area" id="fpScanArea">
+          <span class="fp-scan-icon idle" id="fpScanIcon"><i class="fas fa-fingerprint"></i></span>
+          <div class="fp-scan-text" id="fpScanText">Presiona el botón para registrar tu asistencia</div>
         </div>
 
-        <button type="button" id="btnFingerprintLogin" onclick="fingerprintLogin()" style="
-          width:100%;padding:13px;border:2px solid #0E4D92;border-radius:12px;background:linear-gradient(135deg,rgba(14,77,146,.08),rgba(0,155,72,.08));
-          color:#0E4D92;font-size:16px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;
-          transition:all .3s">
-          <i class="fas fa-fingerprint" style="font-size:22px"></i> Ingresar con Huella
+        <!-- Botón principal -->
+        <button type="button" class="btn-fingerprint" id="btnFingerprintLogin">
+          <i class="fas fa-fingerprint"></i>
+          <span id="btnFpText">Registrar Asistencia</span>
         </button>
-        <p style="text-align:center;font-size:12px;color:#5f6b7a;margin-top:8px">Registra asistencia + inicia sesión automáticamente</p>
 
-        <div id="fpLoginStatus" style="display:none;text-align:center;padding:12px;margin-top:10px;border-radius:10px"></div>
+        <!-- Resultado/feedback -->
+        <div class="fp-result-box" id="fpResultBox"></div>
 
-        <div id="loginMessage" class="modal-message" style="display:none;"></div>
+        <p class="fp-hint">
+          <i class="fas fa-info-circle"></i> 
+          Tu huella inicia sesión y registra entrada/salida automáticamente
+        </p>
       </div>
     </div>
   </div>
@@ -1739,7 +1864,7 @@ $user_iniciales = $user_logged_in ? obtenerIniciales($user_nombre) : '';
         <?php if (!$user_logged_in): ?>
           <div class="hero-actions">
             <a href="#loginModal" class="btn-hero primary" id="openLoginModalFromLanding">
-              <i class="fa-solid fa-right-to-bracket"></i> Iniciar sesión
+              <i class="fa-solid fa-fingerprint"></i> Registrar Asistencia
             </a>
             <a href="#beneficios" class="btn-hero ghost">
               <i class="fa-solid fa-circle-info"></i> Ver beneficios
@@ -2110,70 +2235,91 @@ document.addEventListener('DOMContentLoaded', function () {
   toTop?.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
 
   // ==========================================================
-  // MODAL LOGIN (MISMA FUNCIONALIDAD) + LOADER
+  // MODAL LOGIN (HUELLA + RELOJ EN TIEMPO REAL)
   // ==========================================================
   const openModalBtn = document.getElementById('openLoginModal');
   const openModalBtnLanding = document.getElementById('openLoginModalFromLanding');
   const modal = document.getElementById('loginModal');
   const closeBtn = document.querySelector('.close');
-  const loginForm = document.getElementById('loginForm');
-  const loginMessage = document.getElementById('loginMessage');
-  const loginBtn = document.getElementById('loginBtn');
+
+  // ── Reloj en tiempo real para el modal ──
+  let loginClockInterval = null;
+
+  function updateLoginClock() {
+    const now = new Date();
+    const hm = now.toLocaleTimeString('es-MX', {
+      hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'America/Mexico_City'
+    });
+    const sec = String(now.toLocaleTimeString('es-MX', {
+      second: '2-digit', timeZone: 'America/Mexico_City'
+    })).slice(-2);
+    const dateStr = now.toLocaleDateString('es-MX', {
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+      timeZone: 'America/Mexico_City'
+    });
+
+    const clockHM = document.getElementById('loginClockHM');
+    const clockSec = document.getElementById('loginClockSec');
+    const dateEl = document.getElementById('loginDate');
+
+    if (clockHM) clockHM.textContent = hm;
+    if (clockSec) clockSec.textContent = sec;
+    if (dateEl) dateEl.textContent = dateStr;
+  }
+
+  function startLoginClock() {
+    updateLoginClock();
+    if (loginClockInterval) clearInterval(loginClockInterval);
+    loginClockInterval = setInterval(updateLoginClock, 1000);
+  }
+
+  function stopLoginClock() {
+    if (loginClockInterval) { clearInterval(loginClockInterval); loginClockInterval = null; }
+  }
+
+  // ── Abrir / cerrar modal ──
+  function resetFpModal() {
+    const area = document.getElementById('fpScanArea');
+    const icon = document.getElementById('fpScanIcon');
+    const text = document.getElementById('fpScanText');
+    const btn = document.getElementById('btnFingerprintLogin');
+    const btnText = document.getElementById('btnFpText');
+    const result = document.getElementById('fpResultBox');
+
+    if (area) area.className = 'fp-scan-area';
+    if (icon) { icon.className = 'fp-scan-icon idle'; icon.innerHTML = '<i class="fas fa-fingerprint"></i>'; }
+    if (text) text.textContent = 'Presiona el botón para registrar tu asistencia';
+    if (btn) btn.disabled = false;
+    if (btnText) btnText.textContent = 'Registrar Asistencia';
+    if (result) { result.className = 'fp-result-box'; result.innerHTML = ''; }
+  }
 
   const openModal = function(event) {
     event.preventDefault();
     modal.style.display = 'block';
-    loginMessage.textContent = '';
-    loginMessage.style.display = 'none';
+    document.body.style.overflow = 'hidden';
+    resetFpModal();
+    startLoginClock();
   };
+
+  const closeModal = function() {
+    modal.style.display = 'none';
+    document.body.style.overflow = '';
+    stopLoginClock();
+    resetFpModal();
+  };
+
   openModalBtn?.addEventListener('click', openModal);
   openModalBtnLanding?.addEventListener('click', openModal);
 
-  closeBtn && (closeBtn.onclick = function() {
-    modal.style.display = 'none';
-    loginMessage.textContent = '';
-    loginMessage.style.display = 'none';
-  });
+  closeBtn && (closeBtn.onclick = closeModal);
 
   window.addEventListener('click', function(event){
-    if (event.target === modal) {
-      modal.style.display = 'none';
-      loginMessage.textContent = '';
-      loginMessage.style.display = 'none';
-    }
+    if (event.target === modal) closeModal();
   });
 
-  loginForm && (loginForm.onsubmit = function(event) {
-    event.preventDefault();
-
-    loginBtn?.classList.add('is-loading');
-
-    const formData = new FormData(loginForm);
-
-    fetch('../login_ajax.php', {
-      method: 'POST',
-      body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-      loginBtn?.classList.remove('is-loading');
-
-      if (data.success) {
-        modal.style.display = 'none';
-        loginMessage.textContent = '';
-        loginMessage.style.display = 'none';
-        location.reload();
-      } else {
-        loginMessage.textContent = data.message || 'Usuario o contraseña incorrectos.';
-        loginMessage.style.display = 'block';
-      }
-    })
-    .catch(error => {
-      console.error('Error:', error);
-      loginBtn?.classList.remove('is-loading');
-      loginMessage.textContent = 'Ha ocurrido un error. Por favor, inténtalo de nuevo.';
-      loginMessage.style.display = 'block';
-    });
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && modal && modal.style.display === 'block') closeModal();
   });
 
   // ==========================================================
@@ -2362,69 +2508,113 @@ document.addEventListener('DOMContentLoaded', function () {
 
 <script src="../assets/js/fingerprint.js"></script>
 <script>
-// ══════════ LOGIN POR HUELLA DACTILAR ══════════
-function fingerprintLogin() {
+// ══════════ LOGIN POR HUELLA DACTILAR (nueva lógica) ══════════
+(function() {
   const btn = document.getElementById('btnFingerprintLogin');
-  const status = document.getElementById('fpLoginStatus');
+  if (!btn) return;
 
-  btn.disabled = true;
-  btn.innerHTML = '<i class="fas fa-spinner fa-spin" style="font-size:22px"></i> Pon tu dedo en el escáner...';
-  btn.style.background = 'linear-gradient(135deg, #0E4D92, #009B48)';
-  btn.style.color = '#fff';
-  status.style.display = 'none';
+  const btnText   = document.getElementById('btnFpText');
+  const scanArea  = document.getElementById('fpScanArea');
+  const scanIcon  = document.getElementById('fpScanIcon');
+  const scanText  = document.getElementById('fpScanText');
+  const resultBox = document.getElementById('fpResultBox');
 
-  FP.checkIn((result) => {
-    if (result.match && result.maestro_id) {
-      // Huella reconocida → Login + asistencia via API
-      btn.innerHTML = '<i class="fas fa-check" style="font-size:22px"></i> Huella reconocida!';
-      btn.style.background = '#009B48';
+  const baseUrl = window.location.hostname === 'localhost'
+    ? '/sistema_asistencia/' : '/';
 
-      const baseUrl = window.location.hostname === 'localhost' 
-        ? '/sistema_asistencia/' : '/';
+  // ── Helpers de estado visual ──
+  function setScanState(state) {
+    scanArea.className = 'fp-scan-area ' + state;
 
-      fetch(baseUrl + 'api/huella_login.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ maestro_id: result.maestro_id }),
-      })
-        .then(r => r.json())
-        .then(data => {
-          if (data.success) {
-            status.style.display = 'block';
-            status.style.background = 'rgba(0,155,72,.1)';
-            status.style.color = '#009B48';
-            status.innerHTML = `
-              <div style="font-size:18px;font-weight:700">¡Bienvenido/a, ${data.nombre}!</div>
-              <div style="margin-top:4px">${data.tipo === 'entrada' ? '🟢 Entrada' : '🔵 Salida'} registrada — ${data.hora}</div>
-              <div style="margin-top:6px;font-size:13px">Redirigiendo...</div>
-            `;
-            setTimeout(() => window.location.reload(), 2000);
-          } else {
-            showFpError(data.message || 'Error al iniciar sesión');
-          }
+    const icons = {
+      '': 'fas fa-fingerprint',
+      'scanning': 'fas fa-spinner fa-spin',
+      'success': 'fas fa-check-circle',
+      'error': 'fas fa-times-circle',
+    };
+    scanIcon.innerHTML = '<i class="' + (icons[state] || icons['']) + '"></i>';
+    scanIcon.className = 'fp-scan-icon ' + (state || 'idle');
+  }
+
+  function showResult(type, html) {
+    resultBox.className = 'fp-result-box show ' + type;
+    resultBox.innerHTML = html;
+  }
+
+  function resetBtn() {
+    btn.disabled = false;
+    btnText.textContent = 'Registrar Asistencia';
+    btn.querySelector('i').className = 'fas fa-fingerprint';
+  }
+
+  // ── Click handler ──
+  btn.addEventListener('click', function() {
+    btn.disabled = true;
+    btn.querySelector('i').className = 'fas fa-spinner fa-spin';
+    btnText.textContent = 'Esperando huella...';
+    setScanState('scanning');
+    scanText.textContent = 'Coloca tu dedo en el escáner...';
+    resultBox.className = 'fp-result-box';
+    resultBox.innerHTML = '';
+
+    FP.checkIn(function(result) {
+      if (result.match && result.maestro_id) {
+        // ✅ Huella reconocida
+        setScanState('success');
+        scanText.textContent = '¡Huella reconocida!';
+        btn.querySelector('i').className = 'fas fa-check';
+        btnText.textContent = 'Huella reconocida';
+
+        // Llamar API de login + asistencia
+        fetch(baseUrl + 'api/huella_login.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ maestro_id: result.maestro_id }),
         })
-        .catch(() => showFpError('Error de conexión'));
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            if (data.success) {
+              const tipoEmoji = data.tipo === 'entrada' ? '🟢' : '🔵';
+              const tipoLabel = data.tipo === 'entrada' ? 'Entrada' : 'Salida';
+              const tipoColor = data.tipo === 'entrada' ? '#009B48' : '#0E4D92';
 
-    } else if (result.match === false) {
-      showFpError('Huella no reconocida. Intenta de nuevo.');
-    } else {
-      showFpError(result.message || 'Error del escáner');
-    }
+              showResult('success', 
+                '<div class="fp-welcome-name">¡Bienvenido/a, ' + (data.nombre || 'Maestro') + '!</div>' +
+                '<div class="fp-welcome-tipo" style="color:' + tipoColor + '">' + tipoEmoji + ' ' + tipoLabel + ' registrada — ' + (data.hora || '') + '</div>' +
+                (data.estado && data.estado !== 'A tiempo' ? '<div style="margin-top:6px;font-size:.88rem;color:#e65100">⚠️ ' + data.estado + (data.minutos_retraso > 0 ? ' (' + data.minutos_retraso + ' min)' : '') + '</div>' : '') +
+                '<div style="margin-top:8px;font-size:.82rem;opacity:.7">Redirigiendo al sistema...</div>'
+              );
+
+              setTimeout(function() { window.location.reload(); }, 2500);
+            } else {
+              showFpError(data.message || 'Error al registrar asistencia');
+            }
+          })
+          .catch(function() { showFpError('Error de conexión con el servidor'); });
+
+      } else if (result.match === false) {
+        showFpError('Huella no reconocida. Intenta de nuevo.');
+      } else {
+        showFpError(result.message || 'Error del escáner');
+      }
+    });
   });
 
   function showFpError(msg) {
-    btn.disabled = false;
-    btn.innerHTML = '<i class="fas fa-fingerprint" style="font-size:22px"></i> Ingresar con Huella';
-    btn.style.background = 'linear-gradient(135deg,rgba(14,77,146,.08),rgba(0,155,72,.08))';
-    btn.style.color = '#0E4D92';
+    setScanState('error');
+    scanText.textContent = msg;
+    showResult('error', '<i class="fas fa-exclamation-triangle"></i> ' + msg);
+    resetBtn();
 
-    status.style.display = 'block';
-    status.style.background = 'rgba(229,57,53,.1)';
-    status.style.color = '#e53935';
-    status.textContent = msg;
-    setTimeout(() => { status.style.display = 'none'; }, 4000);
+    // Auto-limpiar después de 4s
+    setTimeout(function() {
+      setScanState('');
+      scanText.textContent = 'Presiona el botón para registrar tu asistencia';
+      resultBox.className = 'fp-result-box';
+      resultBox.innerHTML = '';
+    }, 4000);
   }
-}
+})();
 </script>
 
 </body>
