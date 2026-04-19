@@ -72,7 +72,6 @@ public class HuellaAdapter extends RecyclerView.Adapter<HuellaAdapter.ViewHolder
         // Prioridad 1: imagen base64
         if (h.imagen_base64 != null && !h.imagen_base64.isEmpty()) {
             try {
-                // Limpiar prefijo data:image si viene
                 String base64Data = h.imagen_base64;
                 if (base64Data.contains(",")) {
                     base64Data = base64Data.substring(base64Data.indexOf(",") + 1);
@@ -90,12 +89,9 @@ public class HuellaAdapter extends RecyclerView.Adapter<HuellaAdapter.ViewHolder
             }
         }
 
-        // Prioridad 2: imagen_path (URL del servidor)
-        if (h.imagen_path != null && !h.imagen_path.isEmpty()) {
-            String imageUrl = h.imagen_path;
-            if (!imageUrl.startsWith("http")) {
-                imageUrl = BASE_URL + imageUrl;
-            }
+        // Prioridad 2: usar endpoint de conversión BMP→PNG
+        if (h.maestro_id > 0) {
+            String imageUrl = BASE_URL + "api/get_huella_imagen.php?maestro_id=" + h.maestro_id;
             imageView.setPadding(0, 0, 0, 0);
             imageView.setColorFilter(null);
             try {

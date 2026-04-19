@@ -9,6 +9,14 @@ try {
     $db = (new Database())->getConnection();
     if (!$db) { throw new Exception("Error de conexión a BD"); }
 
+    // Verificar si la tabla justificaciones existe
+    $tableCheck = $db->query("SHOW TABLES LIKE 'justificaciones'")->rowCount();
+    if ($tableCheck == 0) {
+        // La tabla no existe aún, retornar array vacío
+        echo json_encode([], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
     $id_maestro = $_GET['id_maestro'] ?? ($_GET['id'] ?? 0);
 
     $query = "

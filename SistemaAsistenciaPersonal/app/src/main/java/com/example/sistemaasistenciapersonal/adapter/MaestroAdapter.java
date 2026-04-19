@@ -41,8 +41,12 @@ public class MaestroAdapter extends RecyclerView.Adapter<MaestroAdapter.ViewHold
 
         holder.tvUsuarioId.setText("@" + (m.usuario != null ? m.usuario : "ID: " + m.usuario_id));
 
-        String contrato = m.tipo_contrato != null ? m.tipo_contrato.replace("_", " ") : "Sin contrato";
-        holder.tvContrato.setText(contrato.substring(0, 1).toUpperCase() + contrato.substring(1));
+        String contrato = (m.tipo_contrato != null && !m.tipo_contrato.isEmpty()) 
+                ? m.tipo_contrato.replace("_", " ") : "Sin contrato";
+        if (!contrato.isEmpty()) {
+            contrato = contrato.substring(0, 1).toUpperCase() + contrato.substring(1);
+        }
+        holder.tvContrato.setText(contrato);
 
         // Año de registro
         if (holder.tvFecha != null && m.fecha_registro != null && m.fecha_registro.length() >= 10) {

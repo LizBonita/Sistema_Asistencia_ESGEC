@@ -29,8 +29,8 @@ public class MateriaAdapter extends RecyclerView.Adapter<MateriaAdapter.ViewHold
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Materia m = lista.get(position);
-        holder.tvNombre.setText(m.nombre);
-        holder.tvClave.setText("Clave: " + m.clave);
+        holder.tvNombre.setText(m.nombre != null ? m.nombre : "Sin nombre");
+        holder.tvClave.setText(m.clave != null ? "Clave: " + m.clave : "Materia curricular");
     }
 
     @Override
