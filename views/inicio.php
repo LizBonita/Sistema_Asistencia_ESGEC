@@ -1554,6 +1554,108 @@ $user_iniciales = $user_logged_in ? obtenerIniciales($user_nombre) : '';
       margin-top: 10px;
     }
 
+    /* ── MODAL LOGIN (usuario/contraseña + huella) ── */
+    .login-modal-body form{ display:flex; flex-direction:column; gap:12px; text-align:left; }
+    .login-modal-body label{
+      font-weight: 900;
+      color: var(--azul2);
+      display:flex;
+      align-items:center;
+      gap: 8px;
+      font-size: .95rem;
+    }
+    :root[data-theme="dark"] .login-modal-body label{ color: #EAF0FF; }
+    .login-modal-body input[type="text"],
+    .login-modal-body input[type="password"]{
+      padding: 12px 14px;
+      border: 1px solid rgba(14,77,146,.18);
+      border-radius: 14px;
+      font-size: 1rem;
+      outline:none;
+      background: rgba(255,255,255,.92);
+      transition: box-shadow .15s ease, border-color .15s ease;
+      width: 100%;
+    }
+    :root[data-theme="dark"] .login-modal-body input[type="text"],
+    :root[data-theme="dark"] .login-modal-body input[type="password"]{
+      background: rgba(255,255,255,.08);
+      border-color: rgba(255,255,255,.14);
+      color: #EAF0FF;
+    }
+    .login-modal-body input:focus{ border-color: rgba(14,77,146,.35); box-shadow: var(--ring); }
+
+    .login-submit{
+      border:none;
+      cursor:pointer;
+      padding: 14px;
+      border-radius: 16px;
+      font-weight: 900;
+      font-size: 1rem;
+      color:#fff;
+      background: linear-gradient(135deg, var(--verde), var(--azul));
+      box-shadow: 0 14px 28px rgba(0,0,0,.16);
+      transition: transform .18s ease, filter .18s ease;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap: 10px;
+      width: 100%;
+    }
+    .login-submit:hover{ transform: translateY(-1px); filter: brightness(1.03); }
+    .login-submit.is-loading{ opacity:.8; pointer-events:none; }
+    .login-submit .spinner{ display:none; }
+    .login-submit.is-loading .spinner{
+      display:inline-block;
+      width:18px; height:18px;
+      border-radius:999px;
+      border:2px solid rgba(255,255,255,.55);
+      border-top-color:#fff;
+      animation: spin .8s linear infinite;
+    }
+    @keyframes spin{ to{ transform: rotate(360deg); } }
+
+    .login-divider{
+      display:flex;
+      align-items:center;
+      margin:16px 0 12px;
+      gap:12px;
+    }
+    .login-divider hr{ flex:1; border:none; border-top:1px solid rgba(14,77,146,.14); }
+    :root[data-theme="dark"] .login-divider hr{ border-color: rgba(255,255,255,.12); }
+    .login-divider span{ color: var(--page-muted); font-size:13px; font-weight:700; }
+
+    .btn-fp-alt{
+      width:100%;
+      padding:13px;
+      border:2px solid rgba(14,77,146,.22);
+      border-radius:14px;
+      background: linear-gradient(135deg,rgba(14,77,146,.06),rgba(0,155,72,.06));
+      color: var(--azul2);
+      font-size:1rem;
+      font-weight:800;
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      transition: all .2s;
+    }
+    :root[data-theme="dark"] .btn-fp-alt{
+      border-color: rgba(255,255,255,.16);
+      background: rgba(255,255,255,.06);
+      color: #EAF0FF;
+    }
+    .btn-fp-alt:hover{ transform: translateY(-1px); border-color: var(--azul); }
+    .btn-fp-alt:disabled{ opacity:.6; cursor:not-allowed; transform:none; }
+
+    /* ── Botón Registrar Salida (topbar logueado) ── */
+    .btn-salida{
+      background: linear-gradient(135deg, rgba(14,77,146,.12), rgba(0,155,72,.12));
+      border: 1px solid rgba(14,77,146,.22);
+      color: var(--topbar-text);
+    }
+    .btn-salida:hover{ background: rgba(255,255,255,.18); }
+
     .modal-message{
       margin-top: 10px;
       padding: 12px;
@@ -1791,12 +1893,18 @@ $user_iniciales = $user_logged_in ? obtenerIniciales($user_nombre) : '';
             </div>
           </div>
 
+          <a href="#attendanceModal" class="btn btn-salida" id="openAttendanceLogged" title="Registrar salida">
+            <i class="fas fa-fingerprint"></i> Registrar Asistencia
+          </a>
           <a href="logout.php" class="btn btn-logout"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</a>
 
         <?php else: ?>
 
-          <a href="#loginModal" class="btn btn-login-modal" id="openLoginModal" title="Alt+L">
+          <a href="#attendanceModal" class="btn btn-login-modal" id="openAttendanceModal" title="Alt+A">
             <i class="fas fa-fingerprint"></i> Registrar Asistencia
+          </a>
+          <a href="#sessionModal" class="btn btn-login-modal" id="openSessionModal" title="Alt+L" style="background:rgba(255,255,255,.72)">
+            <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
           </a>
 
         <?php endif; ?>
@@ -1805,40 +1913,70 @@ $user_iniciales = $user_logged_in ? obtenerIniciales($user_nombre) : '';
     </div>
   </header>
 
-  <!-- MODAL LOGIN (Huella + Reloj) -->
-  <div id="loginModal" class="modal">
+  <!-- ═══════ MODAL 1: REGISTRO DE ASISTENCIA (solo huella, sin sesión) ═══════ -->
+  <div id="attendanceModal" class="modal">
     <div class="modal-content">
       <div class="modal-header">
         <h2><i class="fas fa-fingerprint"></i> Registro de Asistencia</h2>
-        <span class="close">&times;</span>
+        <span class="close" data-modal="attendanceModal">&times;</span>
       </div>
 
       <div class="modal-body">
-        <!-- Reloj en tiempo real -->
-        <div class="login-clock" id="loginClock">
-          <span id="loginClockHM">--:--</span><span class="login-clock-seconds" id="loginClockSec">00</span>
+        <div class="login-clock" id="attClock">
+          <span id="attClockHM">--:--</span><span class="login-clock-seconds" id="attClockSec">00</span>
         </div>
-        <div class="login-date" id="loginDate">cargando fecha...</div>
+        <div class="login-date" id="attDate">cargando fecha...</div>
 
-        <!-- Área del escáner -->
-        <div class="fp-scan-area" id="fpScanArea">
-          <span class="fp-scan-icon idle" id="fpScanIcon"><i class="fas fa-fingerprint"></i></span>
-          <div class="fp-scan-text" id="fpScanText">Presiona el botón para registrar tu asistencia</div>
+        <div class="fp-scan-area" id="attScanArea">
+          <span class="fp-scan-icon idle" id="attScanIcon"><i class="fas fa-fingerprint"></i></span>
+          <div class="fp-scan-text" id="attScanText">Conectando con el escáner...</div>
         </div>
 
-        <!-- Botón principal -->
-        <button type="button" class="btn-fingerprint" id="btnFingerprintLogin">
-          <i class="fas fa-fingerprint"></i>
-          <span id="btnFpText">Registrar Asistencia</span>
-        </button>
-
-        <!-- Resultado/feedback -->
-        <div class="fp-result-box" id="fpResultBox"></div>
+        <div class="fp-result-box" id="attResultBox"></div>
 
         <p class="fp-hint">
-          <i class="fas fa-info-circle"></i> 
-          Tu huella inicia sesión y registra entrada/salida automáticamente
+          <i class="fas fa-info-circle"></i>
+          Solo registra entrada/salida. No inicia sesión en el sistema.
         </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════ MODAL 2: INICIAR SESIÓN (usuario/contraseña + huella) ═══════ -->
+  <div id="sessionModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2><i class="fas fa-sign-in-alt"></i> Iniciar Sesión</h2>
+        <span class="close" data-modal="sessionModal">&times;</span>
+      </div>
+
+      <div class="modal-body login-modal-body">
+        <form id="loginForm" method="POST" action="../login_ajax.php">
+          <input type="hidden" name="action" value="login">
+
+          <label for="usuario_modal"><i class="fas fa-user"></i> Usuario:</label>
+          <input type="text" id="usuario_modal" name="usuario" required autocomplete="username">
+
+          <label for="password_modal"><i class="fas fa-lock"></i> Contraseña:</label>
+          <input type="password" id="password_modal" name="password" required autocomplete="current-password">
+
+          <button type="submit" class="login-submit" id="loginBtn">
+            <span class="spinner"></span>
+            <i class="fas fa-sign-in-alt"></i>
+            <span>Entrar</span>
+          </button>
+        </form>
+
+        <div class="login-divider">
+          <hr><span>o ingresa con huella</span><hr>
+        </div>
+
+        <button type="button" class="btn-fp-alt" id="btnFpSessionLogin">
+          <i class="fas fa-fingerprint"></i> Ingresar con Huella
+        </button>
+        <div id="fpSessionStatus" style="display:none;text-align:center;padding:12px;margin-top:10px;border-radius:14px;font-weight:800"></div>
+
+        <div id="loginMessage" class="modal-message" style="display:none;"></div>
       </div>
     </div>
   </div>
@@ -1863,11 +2001,11 @@ $user_iniciales = $user_logged_in ? obtenerIniciales($user_nombre) : '';
 
         <?php if (!$user_logged_in): ?>
           <div class="hero-actions">
-            <a href="#loginModal" class="btn-hero primary" id="openLoginModalFromLanding">
+            <a href="#attendanceModal" class="btn-hero primary" id="openAttendanceFromLanding">
               <i class="fa-solid fa-fingerprint"></i> Registrar Asistencia
             </a>
-            <a href="#beneficios" class="btn-hero ghost">
-              <i class="fa-solid fa-circle-info"></i> Ver beneficios
+            <a href="#sessionModal" class="btn-hero ghost" id="openSessionFromLanding">
+              <i class="fa-solid fa-right-to-bracket"></i> Iniciar Sesión
             </a>
           </div>
         <?php else: ?>
@@ -1875,8 +2013,8 @@ $user_iniciales = $user_logged_in ? obtenerIniciales($user_nombre) : '';
             <a href="#dashboard" class="btn-hero primary">
               <i class="fa-solid fa-gauge-high"></i> Panel rápido
             </a>
-            <a href="#" class="btn-hero ghost" onclick="document.getElementById('modulesToggle')?.click(); return false;">
-              <i class="fa-solid fa-grid-2"></i> Abrir módulos
+            <a href="#attendanceModal" class="btn-hero ghost" id="openAttendanceFromHeroLogged">
+              <i class="fa-solid fa-fingerprint"></i> Registrar Asistencia
             </a>
           </div>
         <?php endif; ?>
@@ -2235,17 +2373,42 @@ document.addEventListener('DOMContentLoaded', function () {
   toTop?.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
 
   // ==========================================================
-  // MODAL LOGIN (HUELLA + RELOJ EN TIEMPO REAL)
+  // MODALES GENÉRICOS (abrir / cerrar)
   // ==========================================================
-  const openModalBtn = document.getElementById('openLoginModal');
-  const openModalBtnLanding = document.getElementById('openLoginModalFromLanding');
-  const modal = document.getElementById('loginModal');
-  const closeBtn = document.querySelector('.close');
+  function openAnyModal(id) {
+    const m = document.getElementById(id);
+    if (m) { m.style.display = 'block'; document.body.style.overflow = 'hidden'; }
+  }
+  function closeAnyModal(id) {
+    const m = document.getElementById(id);
+    if (m) { m.style.display = 'none'; document.body.style.overflow = ''; }
+  }
 
-  // ── Reloj en tiempo real para el modal ──
-  let loginClockInterval = null;
+  // Cerrar con botón X (usa data-modal)
+  document.querySelectorAll('.close[data-modal]').forEach(function(btn) {
+    btn.addEventListener('click', function() { closeAnyModal(this.dataset.modal); });
+  });
 
-  function updateLoginClock() {
+  // Cerrar con click en backdrop
+  document.querySelectorAll('.modal').forEach(function(m) {
+    m.addEventListener('click', function(e) { if (e.target === m) closeAnyModal(m.id); });
+  });
+
+  // Cerrar con Escape
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      document.querySelectorAll('.modal').forEach(function(m) {
+        if (m.style.display === 'block') closeAnyModal(m.id);
+      });
+    }
+  });
+
+  // ==========================================================
+  // MODAL 1: REGISTRO DE ASISTENCIA (auto-scan, sin sesión)
+  // ==========================================================
+  let attClockInterval = null;
+
+  function updateAttClock() {
     const now = new Date();
     const hm = now.toLocaleTimeString('es-MX', {
       hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'America/Mexico_City'
@@ -2257,70 +2420,79 @@ document.addEventListener('DOMContentLoaded', function () {
       weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
       timeZone: 'America/Mexico_City'
     });
-
-    const clockHM = document.getElementById('loginClockHM');
-    const clockSec = document.getElementById('loginClockSec');
-    const dateEl = document.getElementById('loginDate');
-
+    const clockHM = document.getElementById('attClockHM');
+    const clockSec = document.getElementById('attClockSec');
+    const dateEl = document.getElementById('attDate');
     if (clockHM) clockHM.textContent = hm;
     if (clockSec) clockSec.textContent = sec;
     if (dateEl) dateEl.textContent = dateStr;
   }
 
-  function startLoginClock() {
-    updateLoginClock();
-    if (loginClockInterval) clearInterval(loginClockInterval);
-    loginClockInterval = setInterval(updateLoginClock, 1000);
+  function openAttendanceModal(e) {
+    if (e) e.preventDefault();
+    openAnyModal('attendanceModal');
+    updateAttClock();
+    if (attClockInterval) clearInterval(attClockInterval);
+    attClockInterval = setInterval(updateAttClock, 1000);
+    // Auto-iniciar escaneo
+    startAttendanceScan();
   }
 
-  function stopLoginClock() {
-    if (loginClockInterval) { clearInterval(loginClockInterval); loginClockInterval = null; }
-  }
-
-  // ── Abrir / cerrar modal ──
-  function resetFpModal() {
-    const area = document.getElementById('fpScanArea');
-    const icon = document.getElementById('fpScanIcon');
-    const text = document.getElementById('fpScanText');
-    const btn = document.getElementById('btnFingerprintLogin');
-    const btnText = document.getElementById('btnFpText');
-    const result = document.getElementById('fpResultBox');
-
-    if (area) area.className = 'fp-scan-area';
-    if (icon) { icon.className = 'fp-scan-icon idle'; icon.innerHTML = '<i class="fas fa-fingerprint"></i>'; }
-    if (text) text.textContent = 'Presiona el botón para registrar tu asistencia';
-    if (btn) btn.disabled = false;
-    if (btnText) btnText.textContent = 'Registrar Asistencia';
-    if (result) { result.className = 'fp-result-box'; result.innerHTML = ''; }
-  }
-
-  const openModal = function(event) {
-    event.preventDefault();
-    modal.style.display = 'block';
-    document.body.style.overflow = 'hidden';
-    resetFpModal();
-    startLoginClock();
-  };
-
-  const closeModal = function() {
-    modal.style.display = 'none';
-    document.body.style.overflow = '';
-    stopLoginClock();
-    resetFpModal();
-  };
-
-  openModalBtn?.addEventListener('click', openModal);
-  openModalBtnLanding?.addEventListener('click', openModal);
-
-  closeBtn && (closeBtn.onclick = closeModal);
-
-  window.addEventListener('click', function(event){
-    if (event.target === modal) closeModal();
+  // Todos los botones que abren el modal de asistencia
+  ['openAttendanceModal', 'openAttendanceFromLanding', 'openAttendanceLogged', 'openAttendanceFromHeroLogged'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.addEventListener('click', openAttendanceModal);
   });
 
-  document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape' && modal && modal.style.display === 'block') closeModal();
+  // ==========================================================
+  // MODAL 2: INICIAR SESIÓN (usuario/contraseña)
+  // ==========================================================
+  function openSessionModal(e) {
+    if (e) e.preventDefault();
+    openAnyModal('sessionModal');
+    const msg = document.getElementById('loginMessage');
+    if (msg) { msg.style.display = 'none'; msg.textContent = ''; }
+  }
+
+  ['openSessionModal', 'openSessionFromLanding'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.addEventListener('click', openSessionModal);
   });
+
+  // Login por formulario
+  const loginForm = document.getElementById('loginForm');
+  const loginMessage = document.getElementById('loginMessage');
+  const loginBtn = document.getElementById('loginBtn');
+
+  if (loginForm) {
+    loginForm.onsubmit = function(event) {
+      event.preventDefault();
+      loginBtn?.classList.add('is-loading');
+      const formData = new FormData(loginForm);
+
+      fetch('../login_ajax.php', { method: 'POST', body: formData })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          loginBtn?.classList.remove('is-loading');
+          if (data.success) {
+            closeAnyModal('sessionModal');
+            location.reload();
+          } else {
+            if (loginMessage) {
+              loginMessage.textContent = data.message || 'Usuario o contraseña incorrectos.';
+              loginMessage.style.display = 'block';
+            }
+          }
+        })
+        .catch(function(err) {
+          loginBtn?.classList.remove('is-loading');
+          if (loginMessage) {
+            loginMessage.textContent = 'Error de conexión. Inténtalo de nuevo.';
+            loginMessage.style.display = 'block';
+          }
+        });
+    };
+  }
 
   // ==========================================================
   // MENU DESPLEGABLE (MÓDULOS) + BUSCADOR
@@ -2494,125 +2666,200 @@ document.addEventListener('DOMContentLoaded', function () {
   supportModal?.addEventListener('click', (e) => { if (e.target === supportModal) closeSupport(); });
 
   // ==========================================================
-  // ATAJOS (Alt+T tema, Alt+M módulos, Alt+L login)
+  // ATAJOS (Alt+T tema, Alt+M módulos, Alt+L login, Alt+A asistencia)
   // ==========================================================
   document.addEventListener('keydown', (e) => {
     if (!e.altKey) return;
     const k = (e.key || '').toLowerCase();
     if (k === 't') { e.preventDefault(); btnTheme?.click(); }
     if (k === 'm') { e.preventDefault(); modulesToggle?.click(); }
-    if (k === 'l') { e.preventDefault(); openModalBtn?.click(); }
+    if (k === 'l') { e.preventDefault(); openSessionModal(); }
+    if (k === 'a') { e.preventDefault(); openAttendanceModal(); }
   });
 });
 </script>
 
 <script src="../assets/js/fingerprint.js"></script>
 <script>
-// ══════════ LOGIN POR HUELLA DACTILAR (nueva lógica) ══════════
-(function() {
-  const btn = document.getElementById('btnFingerprintLogin');
-  if (!btn) return;
+// ══════════ ASISTENCIA: Auto-scan (SIN sesión) ══════════
+var _attScanning = false;
 
-  const btnText   = document.getElementById('btnFpText');
-  const scanArea  = document.getElementById('fpScanArea');
-  const scanIcon  = document.getElementById('fpScanIcon');
-  const scanText  = document.getElementById('fpScanText');
-  const resultBox = document.getElementById('fpResultBox');
+function startAttendanceScan() {
+  if (_attScanning) return;
+  _attScanning = true;
 
-  const baseUrl = window.location.hostname === 'localhost'
+  var scanArea  = document.getElementById('attScanArea');
+  var scanIcon  = document.getElementById('attScanIcon');
+  var scanText  = document.getElementById('attScanText');
+  var resultBox = document.getElementById('attResultBox');
+
+  var baseUrl = window.location.hostname === 'localhost'
     ? '/sistema_asistencia/' : '/';
 
-  // ── Helpers de estado visual ──
-  function setScanState(state) {
+  function setAttState(state) {
     scanArea.className = 'fp-scan-area ' + state;
-
-    const icons = {
+    var icons = {
       '': 'fas fa-fingerprint',
       'scanning': 'fas fa-spinner fa-spin',
       'success': 'fas fa-check-circle',
-      'error': 'fas fa-times-circle',
+      'error': 'fas fa-times-circle'
     };
     scanIcon.innerHTML = '<i class="' + (icons[state] || icons['']) + '"></i>';
     scanIcon.className = 'fp-scan-icon ' + (state || 'idle');
   }
 
-  function showResult(type, html) {
+  function showAttResult(type, html) {
     resultBox.className = 'fp-result-box show ' + type;
     resultBox.innerHTML = html;
   }
 
-  function resetBtn() {
-    btn.disabled = false;
-    btnText.textContent = 'Registrar Asistencia';
-    btn.querySelector('i').className = 'fas fa-fingerprint';
-  }
+  // Iniciar estado scanning
+  setAttState('scanning');
+  scanText.textContent = 'Coloca tu dedo en el escáner...';
+  resultBox.className = 'fp-result-box';
+  resultBox.innerHTML = '';
 
-  // ── Click handler ──
+  FP.checkIn(function(result) {
+    _attScanning = false;
+
+    if (result.match && result.attendance && result.attendance.success) {
+      // El checkIn ya registró la asistencia via huella_verificar.php
+      setAttState('success');
+      scanText.textContent = '¡Asistencia registrada!';
+
+      var att = result.attendance;
+      var tipoEmoji = att.tipo === 'entrada' ? '🟢' : (att.tipo === 'salida' ? '🔵' : '🟠');
+      var tipoLabel = att.tipo === 'entrada' ? 'Entrada' : (att.tipo === 'salida' ? 'Salida' : 'Completo');
+      var tipoColor = att.tipo === 'entrada' ? '#009B48' : '#0E4D92';
+
+      showAttResult('success',
+        '<div class="fp-welcome-name">' + (att.nombre || 'Maestro') + '</div>' +
+        '<div class="fp-welcome-tipo" style="color:' + tipoColor + '">' + tipoEmoji + ' ' + tipoLabel + ' registrada — ' + (att.hora || '') + '</div>' +
+        (att.estado && att.estado !== 'A tiempo' ? '<div style="margin-top:6px;font-size:.88rem;color:#e65100">⚠️ ' + att.estado + (att.minutos_retraso > 0 ? ' (' + att.minutos_retraso + ' min)' : '') + '</div>' : '') +
+        (att.tipo === 'completo' ? '<div style="margin-top:6px;font-size:.88rem;color:#ff9800">Ya registraste entrada y salida hoy</div>' : '')
+      );
+
+      // Auto-cerrar después de 5s
+      setTimeout(function() {
+        var modal = document.getElementById('attendanceModal');
+        if (modal && modal.style.display === 'block') {
+          setAttState('');
+          scanText.textContent = 'Listo';
+          resultBox.className = 'fp-result-box';
+        }
+      }, 5000);
+
+    } else if (result.match && result.maestro_id) {
+      // Match pero sin attendance (checkIn directo) — registrar manualmente
+      setAttState('success');
+      scanText.textContent = '¡Huella reconocida!';
+
+      // Solo registrar asistencia, SIN iniciar sesión
+      fetch(baseUrl + 'api/huella_verificar.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ maestro_id: result.maestro_id })
+      })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (data.success) {
+            var tipoEmoji = data.tipo === 'entrada' ? '🟢' : (data.tipo === 'salida' ? '🔵' : '🟠');
+            var tipoLabel = data.tipo === 'entrada' ? 'Entrada' : (data.tipo === 'salida' ? 'Salida' : 'Completo');
+            var tipoColor = data.tipo === 'entrada' ? '#009B48' : '#0E4D92';
+
+            showAttResult('success',
+              '<div class="fp-welcome-name">' + (data.nombre || 'Maestro') + '</div>' +
+              '<div class="fp-welcome-tipo" style="color:' + tipoColor + '">' + tipoEmoji + ' ' + tipoLabel + ' registrada — ' + (data.hora || '') + '</div>' +
+              (data.estado && data.estado !== 'A tiempo' ? '<div style="margin-top:6px;font-size:.88rem;color:#e65100">⚠️ ' + data.estado + '</div>' : '')
+            );
+          } else {
+            showAttError(data.message || 'Error al registrar');
+          }
+        })
+        .catch(function() { showAttError('Error de conexión'); });
+
+    } else if (result.match === false) {
+      showAttError('Huella no reconocida. Intenta de nuevo.');
+    } else {
+      showAttError(result.message || 'Error del escáner');
+    }
+  });
+
+  function showAttError(msg) {
+    _attScanning = false;
+    setAttState('error');
+    scanText.textContent = msg;
+    showAttResult('error', '<i class="fas fa-exclamation-triangle"></i> ' + msg);
+
+    setTimeout(function() {
+      var modal = document.getElementById('attendanceModal');
+      if (modal && modal.style.display === 'block') {
+        setAttState('');
+        scanText.textContent = 'Coloca tu dedo en el escáner...';
+        resultBox.className = 'fp-result-box';
+        resultBox.innerHTML = '';
+        // Re-intentar auto-scan
+        startAttendanceScan();
+      }
+    }, 3500);
+  }
+}
+
+// ══════════ SESIÓN: Login por huella (CON sesión) ══════════
+(function() {
+  var btn = document.getElementById('btnFpSessionLogin');
+  if (!btn) return;
+
+  var status = document.getElementById('fpSessionStatus');
+  var baseUrl = window.location.hostname === 'localhost'
+    ? '/sistema_asistencia/' : '/';
+
   btn.addEventListener('click', function() {
     btn.disabled = true;
-    btn.querySelector('i').className = 'fas fa-spinner fa-spin';
-    btnText.textContent = 'Esperando huella...';
-    setScanState('scanning');
-    scanText.textContent = 'Coloca tu dedo en el escáner...';
-    resultBox.className = 'fp-result-box';
-    resultBox.innerHTML = '';
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Pon tu dedo en el escáner...';
 
     FP.checkIn(function(result) {
       if (result.match && result.maestro_id) {
-        // ✅ Huella reconocida
-        setScanState('success');
-        scanText.textContent = '¡Huella reconocida!';
-        btn.querySelector('i').className = 'fas fa-check';
-        btnText.textContent = 'Huella reconocida';
+        btn.innerHTML = '<i class="fas fa-check"></i> ¡Huella reconocida!';
 
-        // Llamar API de login + asistencia
         fetch(baseUrl + 'api/huella_login.php', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ maestro_id: result.maestro_id }),
+          body: JSON.stringify({ maestro_id: result.maestro_id })
         })
           .then(function(r) { return r.json(); })
           .then(function(data) {
             if (data.success) {
-              const tipoEmoji = data.tipo === 'entrada' ? '🟢' : '🔵';
-              const tipoLabel = data.tipo === 'entrada' ? 'Entrada' : 'Salida';
-              const tipoColor = data.tipo === 'entrada' ? '#009B48' : '#0E4D92';
-
-              showResult('success', 
-                '<div class="fp-welcome-name">¡Bienvenido/a, ' + (data.nombre || 'Maestro') + '!</div>' +
-                '<div class="fp-welcome-tipo" style="color:' + tipoColor + '">' + tipoEmoji + ' ' + tipoLabel + ' registrada — ' + (data.hora || '') + '</div>' +
-                (data.estado && data.estado !== 'A tiempo' ? '<div style="margin-top:6px;font-size:.88rem;color:#e65100">⚠️ ' + data.estado + (data.minutos_retraso > 0 ? ' (' + data.minutos_retraso + ' min)' : '') + '</div>' : '') +
-                '<div style="margin-top:8px;font-size:.82rem;opacity:.7">Redirigiendo al sistema...</div>'
-              );
-
-              setTimeout(function() { window.location.reload(); }, 2500);
+              status.style.display = 'block';
+              status.style.background = 'rgba(0,155,72,.1)';
+              status.style.color = '#009B48';
+              status.innerHTML =
+                '<div style="font-size:18px;font-weight:700">¡Bienvenido/a, ' + (data.nombre || '') + '!</div>' +
+                '<div style="margin-top:4px">' + (data.tipo === 'entrada' ? '🟢 Entrada' : '🔵 Salida') + ' registrada — ' + (data.hora || '') + '</div>' +
+                '<div style="margin-top:6px;font-size:13px">Redirigiendo...</div>';
+              setTimeout(function() { window.location.reload(); }, 2000);
             } else {
-              showFpError(data.message || 'Error al registrar asistencia');
+              showSessionFpError(data.message || 'Error al iniciar sesión');
             }
           })
-          .catch(function() { showFpError('Error de conexión con el servidor'); });
+          .catch(function() { showSessionFpError('Error de conexión'); });
 
       } else if (result.match === false) {
-        showFpError('Huella no reconocida. Intenta de nuevo.');
+        showSessionFpError('Huella no reconocida.');
       } else {
-        showFpError(result.message || 'Error del escáner');
+        showSessionFpError(result.message || 'Error del escáner');
       }
     });
   });
 
-  function showFpError(msg) {
-    setScanState('error');
-    scanText.textContent = msg;
-    showResult('error', '<i class="fas fa-exclamation-triangle"></i> ' + msg);
-    resetBtn();
-
-    // Auto-limpiar después de 4s
-    setTimeout(function() {
-      setScanState('');
-      scanText.textContent = 'Presiona el botón para registrar tu asistencia';
-      resultBox.className = 'fp-result-box';
-      resultBox.innerHTML = '';
-    }, 4000);
+  function showSessionFpError(msg) {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-fingerprint"></i> Ingresar con Huella';
+    status.style.display = 'block';
+    status.style.background = 'rgba(229,57,53,.1)';
+    status.style.color = '#e53935';
+    status.textContent = msg;
+    setTimeout(function() { status.style.display = 'none'; }, 4000);
   }
 })();
 </script>
