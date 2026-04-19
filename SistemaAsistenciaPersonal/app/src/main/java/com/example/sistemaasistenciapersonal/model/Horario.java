@@ -12,8 +12,8 @@ public class Horario {
     public String dia; // alias
     public String hora_inicio;
     public String hora_fin;
-    public int tolerancia_entrada;
-    public int limite_retardo;
+    public String tolerancia_entrada; // Puede venir como TIME "00:00:10" o como int
+    public String limite_retardo;     // Puede venir como TIME "00:00:15" o como int
     // Campos del JOIN
     public String nombre_grupo;
     public String nombre_materia;

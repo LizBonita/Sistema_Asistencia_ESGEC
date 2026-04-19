@@ -88,6 +88,7 @@ public class GestionHorariosFragment extends Fragment implements MaestroHorarioA
                 if (response.isSuccessful() && response.body() != null) {
                     listaMaestros.clear();
                     listaMaestros.addAll(response.body());
+                    adapter.notifyDataSetChanged(); // Mostrar maestros inmediatamente
                     if (tvStatTotalMaestros != null) tvStatTotalMaestros.setText(String.valueOf(listaMaestros.size()));
                     cargarHorarios();
                 } else {
@@ -312,8 +313,8 @@ public class GestionHorariosFragment extends Fragment implements MaestroHorarioA
 
             String tolStr = etTolerancia.getText().toString().trim();
             String limStr = etLimiteRetardo.getText().toString().trim();
-            nuevoHorario.tolerancia_entrada = tolStr.isEmpty() ? 10 : Integer.parseInt(tolStr);
-            nuevoHorario.limite_retardo = limStr.isEmpty() ? 15 : Integer.parseInt(limStr);
+            nuevoHorario.tolerancia_entrada = tolStr.isEmpty() ? "10" : tolStr;
+            nuevoHorario.limite_retardo = limStr.isEmpty() ? "15" : limStr;
 
             guardarHorario(nuevoHorario, dialog);
         });
