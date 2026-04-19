@@ -3,22 +3,29 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:background="#FFFFFF">
 
-    <!-- Header -->
+    <!-- Header con gradiente institucional -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="#163B73"
+        android:background="@drawable/gradient_appbar"
         android:gravity="center_vertical"
-        android:paddingHorizontal="20dp"
-        android:paddingVertical="16dp">
-        <ImageView android:layout_width="22dp" android:layout_height="22dp"
+        android:paddingHorizontal="22dp"
+        android:paddingVertical="18dp">
+        <ImageView android:layout_width="24dp" android:layout_height="24dp"
             android:src="@drawable/ic_calendar" app:tint="#FFFFFF" />
-        <TextView android:layout_width="0dp" android:layout_height="wrap_content"
-            android:layout_weight="1" android:layout_marginStart="10dp"
-            android:text="Agregar nuevo horario" android:textColor="#FFFFFF"
-            android:textSize="17sp" android:textStyle="bold" />
+        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+            android:layout_weight="1" android:layout_marginStart="12dp"
+            android:orientation="vertical">
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="Agregar nuevo horario"
+                android:textColor="#FFFFFF" android:textSize="18sp" android:textStyle="bold" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="Registra un nuevo horario para el maestro"
+                android:textColor="#FFFFFFCC" android:textSize="12sp" android:layout_marginTop="2dp" />
+        </LinearLayout>
     </LinearLayout>
 
     <ScrollView
@@ -30,112 +37,169 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="20dp">
+            android:paddingHorizontal="22dp"
+            android:paddingTop="22dp"
+            android:paddingBottom="16dp">
 
+            <!-- ====== MAESTRO ====== -->
             <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                android:text="Registra un nuevo horario para el maestro."
-                android:textColor="#64748B" android:textSize="13sp"
-                android:layout_marginBottom="16dp" />
+                android:text="👤  Maestro" android:textColor="#334155" android:textSize="13sp"
+                android:textStyle="bold" android:layout_marginBottom="8dp" />
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:layout_marginBottom="18dp"
+                android:background="@drawable/bg_spinner_outline">
+                <Spinner android:id="@+id/spinnerMaestro"
+                    android:layout_width="match_parent" android:layout_height="match_parent"
+                    android:paddingStart="14dp" android:paddingEnd="36dp" />
+            </FrameLayout>
 
-            <!-- Maestro Spinner -->
+            <!-- ====== MATERIA ====== -->
             <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                android:text="Maestro" android:textColor="#163B73" android:textSize="13sp"
-                android:textStyle="bold" android:layout_marginBottom="6dp" />
-            <Spinner android:id="@+id/spinnerMaestro"
-                android:layout_width="match_parent" android:layout_height="48dp"
-                android:background="@android:drawable/btn_dropdown"
-                android:layout_marginBottom="14dp" />
+                android:text="📚  Materia" android:textColor="#334155" android:textSize="13sp"
+                android:textStyle="bold" android:layout_marginBottom="8dp" />
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:layout_marginBottom="18dp"
+                android:background="@drawable/bg_spinner_outline">
+                <Spinner android:id="@+id/spinnerMateria"
+                    android:layout_width="match_parent" android:layout_height="match_parent"
+                    android:paddingStart="14dp" android:paddingEnd="36dp" />
+            </FrameLayout>
 
-            <!-- Materia Spinner -->
+            <!-- ====== GRUPO ====== -->
             <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                android:text="Materia" android:textColor="#163B73" android:textSize="13sp"
-                android:textStyle="bold" android:layout_marginBottom="6dp" />
-            <Spinner android:id="@+id/spinnerMateria"
-                android:layout_width="match_parent" android:layout_height="48dp"
-                android:background="@android:drawable/btn_dropdown"
-                android:layout_marginBottom="14dp" />
+                android:text="🏫  Grupo" android:textColor="#334155" android:textSize="13sp"
+                android:textStyle="bold" android:layout_marginBottom="8dp" />
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:layout_marginBottom="18dp"
+                android:background="@drawable/bg_spinner_outline">
+                <Spinner android:id="@+id/spinnerGrupo"
+                    android:layout_width="match_parent" android:layout_height="match_parent"
+                    android:paddingStart="14dp" android:paddingEnd="36dp" />
+            </FrameLayout>
 
-            <!-- Grupo Spinner -->
+            <!-- ====== DÍA ====== -->
             <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                android:text="Grupo" android:textColor="#163B73" android:textSize="13sp"
-                android:textStyle="bold" android:layout_marginBottom="6dp" />
-            <Spinner android:id="@+id/spinnerGrupo"
-                android:layout_width="match_parent" android:layout_height="48dp"
-                android:background="@android:drawable/btn_dropdown"
-                android:layout_marginBottom="14dp" />
+                android:text="📅  Día de la semana" android:textColor="#334155" android:textSize="13sp"
+                android:textStyle="bold" android:layout_marginBottom="8dp" />
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:layout_marginBottom="18dp"
+                android:background="@drawable/bg_spinner_outline">
+                <Spinner android:id="@+id/spinnerDia"
+                    android:layout_width="match_parent" android:layout_height="match_parent"
+                    android:paddingStart="14dp" android:paddingEnd="36dp" />
+            </FrameLayout>
 
-            <!-- Día Spinner -->
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                android:text="Día de la semana" android:textColor="#163B73" android:textSize="13sp"
-                android:textStyle="bold" android:layout_marginBottom="6dp" />
-            <Spinner android:id="@+id/spinnerDia"
-                android:layout_width="match_parent" android:layout_height="48dp"
-                android:background="@android:drawable/btn_dropdown"
-                android:layout_marginBottom="14dp" />
+            <!-- ====== HORAS (fila de 2) ====== -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="18dp"
+                android:weightSum="2">
 
-            <!-- Hora inicio -->
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                android:text="Hora de inicio" android:textColor="#163B73" android:textSize="13sp"
-                android:textStyle="bold" android:layout_marginBottom="6dp" />
-            <com.google.android.material.textfield.TextInputLayout
-                android:layout_width="match_parent" android:layout_height="wrap_content"
-                android:layout_marginBottom="14dp"
-                app:boxCornerRadiusTopStart="10dp" app:boxCornerRadiusTopEnd="10dp"
-                app:boxCornerRadiusBottomStart="10dp" app:boxCornerRadiusBottomEnd="10dp">
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/etHoraInicio"
-                    android:layout_width="match_parent" android:layout_height="wrap_content"
-                    android:hint="Ej. 07:00" android:focusable="false" android:clickable="true"
-                    android:inputType="none" />
-            </com.google.android.material.textfield.TextInputLayout>
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                    android:layout_weight="1" android:layout_marginEnd="8dp"
+                    android:orientation="vertical">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="🕐  Hora inicio" android:textColor="#334155" android:textSize="13sp"
+                        android:textStyle="bold" android:layout_marginBottom="8dp" />
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="match_parent" android:layout_height="wrap_content"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        app:boxCornerRadiusTopStart="12dp" app:boxCornerRadiusTopEnd="12dp"
+                        app:boxCornerRadiusBottomStart="12dp" app:boxCornerRadiusBottomEnd="12dp"
+                        app:boxStrokeColor="#CBD5E1"
+                        app:endIconMode="custom" app:endIconDrawable="@android:drawable/ic_menu_recent_history">
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/etHoraInicio"
+                            android:layout_width="match_parent" android:layout_height="wrap_content"
+                            android:hint="07:00" android:focusable="false" android:clickable="true"
+                            android:inputType="none" android:textSize="15sp" />
+                    </com.google.android.material.textfield.TextInputLayout>
+                </LinearLayout>
 
-            <!-- Hora fin -->
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                android:text="Hora de fin" android:textColor="#163B73" android:textSize="13sp"
-                android:textStyle="bold" android:layout_marginBottom="6dp" />
-            <com.google.android.material.textfield.TextInputLayout
-                android:layout_width="match_parent" android:layout_height="wrap_content"
-                android:layout_marginBottom="14dp"
-                app:boxCornerRadiusTopStart="10dp" app:boxCornerRadiusTopEnd="10dp"
-                app:boxCornerRadiusBottomStart="10dp" app:boxCornerRadiusBottomEnd="10dp">
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/etHoraFin"
-                    android:layout_width="match_parent" android:layout_height="wrap_content"
-                    android:hint="Ej. 08:00" android:focusable="false" android:clickable="true"
-                    android:inputType="none" />
-            </com.google.android.material.textfield.TextInputLayout>
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                    android:layout_weight="1" android:layout_marginStart="8dp"
+                    android:orientation="vertical">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="🕐  Hora fin" android:textColor="#334155" android:textSize="13sp"
+                        android:textStyle="bold" android:layout_marginBottom="8dp" />
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="match_parent" android:layout_height="wrap_content"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        app:boxCornerRadiusTopStart="12dp" app:boxCornerRadiusTopEnd="12dp"
+                        app:boxCornerRadiusBottomStart="12dp" app:boxCornerRadiusBottomEnd="12dp"
+                        app:boxStrokeColor="#CBD5E1"
+                        app:endIconMode="custom" app:endIconDrawable="@android:drawable/ic_menu_recent_history">
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/etHoraFin"
+                            android:layout_width="match_parent" android:layout_height="wrap_content"
+                            android:hint="08:00" android:focusable="false" android:clickable="true"
+                            android:inputType="none" android:textSize="15sp" />
+                    </com.google.android.material.textfield.TextInputLayout>
+                </LinearLayout>
+            </LinearLayout>
 
-            <!-- Tolerancia -->
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                android:text="Tolerancia de entrada (min)" android:textColor="#163B73" android:textSize="13sp"
-                android:textStyle="bold" android:layout_marginBottom="6dp" />
-            <com.google.android.material.textfield.TextInputLayout
-                android:layout_width="match_parent" android:layout_height="wrap_content"
-                android:layout_marginBottom="14dp"
-                app:boxCornerRadiusTopStart="10dp" app:boxCornerRadiusTopEnd="10dp"
-                app:boxCornerRadiusBottomStart="10dp" app:boxCornerRadiusBottomEnd="10dp">
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/etTolerancia"
-                    android:layout_width="match_parent" android:layout_height="wrap_content"
-                    android:hint="Ej. 10" android:inputType="number" android:text="10" />
-            </com.google.android.material.textfield.TextInputLayout>
+            <!-- ====== TOLERANCIAS (fila de 2) ====== -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="24dp"
+                android:weightSum="2">
 
-            <!-- Límite retardo -->
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                android:text="Límite de retardo (min)" android:textColor="#163B73" android:textSize="13sp"
-                android:textStyle="bold" android:layout_marginBottom="6dp" />
-            <com.google.android.material.textfield.TextInputLayout
-                android:layout_width="match_parent" android:layout_height="wrap_content"
-                android:layout_marginBottom="20dp"
-                app:boxCornerRadiusTopStart="10dp" app:boxCornerRadiusTopEnd="10dp"
-                app:boxCornerRadiusBottomStart="10dp" app:boxCornerRadiusBottomEnd="10dp">
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/etLimiteRetardo"
-                    android:layout_width="match_parent" android:layout_height="wrap_content"
-                    android:hint="Ej. 15" android:inputType="number" android:text="15" />
-            </com.google.android.material.textfield.TextInputLayout>
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                    android:layout_weight="1" android:layout_marginEnd="8dp"
+                    android:orientation="vertical">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="Tolerancia (min)" android:textColor="#334155" android:textSize="13sp"
+                        android:textStyle="bold" android:layout_marginBottom="8dp" />
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="match_parent" android:layout_height="wrap_content"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        app:boxCornerRadiusTopStart="12dp" app:boxCornerRadiusTopEnd="12dp"
+                        app:boxCornerRadiusBottomStart="12dp" app:boxCornerRadiusBottomEnd="12dp"
+                        app:boxStrokeColor="#CBD5E1">
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/etTolerancia"
+                            android:layout_width="match_parent" android:layout_height="wrap_content"
+                            android:hint="10" android:inputType="number"
+                            android:text="10" android:textSize="15sp" android:gravity="center" />
+                    </com.google.android.material.textfield.TextInputLayout>
+                </LinearLayout>
 
-            <!-- Buttons -->
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                    android:layout_weight="1" android:layout_marginStart="8dp"
+                    android:orientation="vertical">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="Límite retardo (min)" android:textColor="#334155" android:textSize="13sp"
+                        android:textStyle="bold" android:layout_marginBottom="8dp" />
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="match_parent" android:layout_height="wrap_content"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        app:boxCornerRadiusTopStart="12dp" app:boxCornerRadiusTopEnd="12dp"
+                        app:boxCornerRadiusBottomStart="12dp" app:boxCornerRadiusBottomEnd="12dp"
+                        app:boxStrokeColor="#CBD5E1">
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/etLimiteRetardo"
+                            android:layout_width="match_parent" android:layout_height="wrap_content"
+                            android:hint="15" android:inputType="number"
+                            android:text="15" android:textSize="15sp" android:gravity="center" />
+                    </com.google.android.material.textfield.TextInputLayout>
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Divider -->
+            <View android:layout_width="match_parent" android:layout_height="1dp"
+                android:background="#F1F5F9" android:layout_marginBottom="16dp" />
+
+            <!-- ====== BOTONES ====== -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -144,14 +208,17 @@
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnCancelar"
                     style="@style/Widget.MaterialComponents.Button.TextButton"
-                    android:layout_width="wrap_content" android:layout_height="wrap_content"
-                    android:text="Cancelar" android:textColor="#64748B" />
+                    android:layout_width="wrap_content" android:layout_height="44dp"
+                    android:text="Cancelar" android:textColor="#64748B"
+                    android:textSize="14sp" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnGuardar"
-                    android:layout_width="wrap_content" android:layout_height="wrap_content"
-                    android:text="✓ Guardar" android:layout_marginStart="8dp"
-                    app:backgroundTint="#006847" />
+                    android:layout_width="wrap_content" android:layout_height="44dp"
+                    android:text="✓  Guardar" android:layout_marginStart="12dp"
+                    android:textSize="14sp"
+                    app:backgroundTint="#006847"
+                    app:cornerRadius="12dp" />
             </LinearLayout>
         </LinearLayout>
     </ScrollView>
