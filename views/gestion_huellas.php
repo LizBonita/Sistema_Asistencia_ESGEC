@@ -423,7 +423,7 @@ $user_rol    = $_SESSION['user_rol_nombre'] ?? '';
     </div>
   </div>
 
-  <script src="../assets/js/fingerprint.js"></script>
+  <script src="../assets/js/fingerprint.js?v=<?php echo time(); ?>"></script>
   <script>
     let currentMaestroId = null;
 
@@ -521,101 +521,102 @@ $user_rol    = $_SESSION['user_rol_nombre'] ?? '';
     });
 
     // Iniciar enrollment
+    // ── Enrollment con progreso visual ──
+    var _enrollTimer = null;
+    var _enrollDone = false;
+
     function startEnroll(maestroId, nombre) {
       currentMaestroId = maestroId;
+      _enrollDone = false;
+      if (_enrollTimer) { clearInterval(_enrollTimer); _enrollTimer = null; }
+
       document.getElementById('modal-teacher-name').textContent = nombre;
       document.getElementById('enroll-modal').classList.add('active');
       document.getElementById('fp-image').style.display = 'none';
       document.getElementById('modal-result').innerHTML = '';
+      document.getElementById('enroll-stage-img').classList.remove('visible');
+      document.getElementById('enroll-stage-img').src = '';
 
-      // Reset progress dots — crear 6 por defecto inmediatamente
+      var TOTAL = 6;
       var progressEl = document.getElementById('enroll-progress');
-      document.getElementById('enroll-stage-label').textContent = 'Preparando escáner...';
-      var stageImg = document.getElementById('enroll-stage-img');
-      stageImg.classList.remove('visible');
-      stageImg.src = '';
+      var stageLabel = document.getElementById('enroll-stage-label');
 
-      var totalStages = 6; // default
-      var dotsCreated = false;
+      // Crear dots inmediatamente
+      var dotsHtml = '';
+      for (var i = 1; i <= TOTAL; i++) dotsHtml += '<span class="enroll-dot" id="dot-' + i + '"></span>';
+      progressEl.innerHTML = dotsHtml;
+      stageLabel.textContent = 'Coloca tu dedo en el escáner...';
 
-      function createDots(total) {
-        totalStages = total;
-        dotsCreated = true;
-        var html = '';
-        for (var i = 1; i <= total; i++) {
-          html += '<span class="enroll-dot" id="dot-' + i + '"></span>';
-        }
-        progressEl.innerHTML = html;
-      }
+      // Marcar dot 1 como activo
+      var currentDot = 1;
+      setDot(1, 'active');
 
-      // Crear inmediatamente con 6 dots
-      createDots(6);
-      dotsCreated = false; // permitir re-crear si el agente indica otro total
-
-      function updateDot(stage, status) {
-        // status: 'active', 'done', 'error'
-        for (var i = 1; i <= totalStages; i++) {
-          var dot = document.getElementById('dot-' + i);
-          if (!dot) continue;
-          if (i < stage) {
-            dot.className = 'enroll-dot done';
-          } else if (i === stage) {
-            dot.className = 'enroll-dot ' + status;
-          } else {
-            dot.className = 'enroll-dot';
-          }
+      function setDot(n, state) {
+        for (var j = 1; j <= TOTAL; j++) {
+          var d = document.getElementById('dot-' + j);
+          if (!d) continue;
+          if (j < n) d.className = 'enroll-dot done';
+          else if (j === n) d.className = 'enroll-dot ' + state;
+          else d.className = 'enroll-dot';
         }
       }
 
-      // onProgress callback
+      function allDone() {
+        for (var j = 1; j <= TOTAL; j++) {
+          var d = document.getElementById('dot-' + j);
+          if (d) d.className = 'enroll-dot done';
+        }
+        stageLabel.textContent = '✅ Todas las capturas completadas';
+      }
+
+      // ── Timer: avanza dots cada ~3.5s (simula progreso si el agente no envía etapas) ──
+      _enrollTimer = setInterval(function() {
+        if (_enrollDone || currentDot >= TOTAL) {
+          clearInterval(_enrollTimer);
+          return;
+        }
+        // Marcar actual como done y avanzar
+        setDot(currentDot, 'done');
+        currentDot++;
+        stageLabel.textContent = 'Captura ' + currentDot + ' de ' + TOTAL + ' — Coloca tu dedo';
+        setDot(currentDot, 'active');
+      }, 3500);
+
+      // ── onProgress: si el agente envía etapas reales, sincroniza ──
       function onProgress(data) {
-        var total = data.total_stages || totalStages;
+        if (_enrollDone) return;
         var stage = data.stage || 0;
+        var total = data.total_stages || TOTAL;
 
-        if (!dotsCreated && total > 0) {
-          createDots(total);
+        if (data.status === 'scanning' && stage > 0) {
+          currentDot = stage;
+          stageLabel.textContent = 'Captura ' + stage + ' de ' + total + ' — Coloca tu dedo';
+          setDot(stage, 'active');
         }
-
-        var stageLabel = document.getElementById('enroll-stage-label');
-        var stageImgEl = document.getElementById('enroll-stage-img');
-
-        if (data.status === 'scanning') {
-          // Inicio de una etapa
-          stageLabel.textContent = 'Captura ' + stage + ' de ' + total;
-          updateDot(stage, 'active');
-        }
-
-        if (data.status === 'stage_complete') {
-          // Etapa completada
+        if (data.status === 'stage_complete' && stage > 0) {
+          currentDot = stage + 1;
           stageLabel.textContent = '✓ Captura ' + stage + ' de ' + total + ' completada';
-          updateDot(stage, 'done');
-
-          // Mostrar imagen de esta captura
-          if (data.imagen_base64) {
-            stageImgEl.src = 'data:image/bmp;base64,' + data.imagen_base64;
-            stageImgEl.classList.add('visible');
+          setDot(stage, 'done');
+          if (stage < total) {
+            setTimeout(function() { setDot(stage + 1, 'active'); }, 300);
           }
         }
-
         if (data.status === 'stage_retry') {
-          stageLabel.textContent = '⚠ Reintenta la captura ' + stage;
-          updateDot(stage, 'error');
+          stageLabel.textContent = '⚠ Reintenta — Coloca tu dedo de nuevo';
+          setDot(stage, 'error');
         }
-
         if (data.status === 'complete') {
-          // Enrollment finalizado
-          stageLabel.textContent = '✅ Todas las capturas completadas';
-          updateDot(total, 'done');
-
-          if (data.imagen_base64) {
-            stageImgEl.src = 'data:image/bmp;base64,' + data.imagen_base64;
-            stageImgEl.classList.add('visible');
-          }
+          allDone();
         }
       }
 
+      // ── Callback final ──
       FP.enroll(maestroId, 'right-index-finger', function(result) {
+        _enrollDone = true;
+        if (_enrollTimer) { clearInterval(_enrollTimer); _enrollTimer = null; }
+
         if (result.status === 'ok' && result.saved) {
+          allDone();
           document.getElementById('modal-result').innerHTML =
             '<div style="background:linear-gradient(135deg,rgba(0,155,72,.1),rgba(0,155,72,.05));color:var(--accent);padding:14px;border-radius:12px;margin-top:12px;font-weight:600;border:1px solid rgba(0,155,72,.2)">' +
             '<i class="fas fa-check-circle"></i> Huella guardada exitosamente</div>';
