@@ -282,6 +282,80 @@ $user_rol    = $_SESSION['user_rol_nombre'] ?? '';
     }
     .btn-close-modal:hover { background: rgba(0,0,0,.1) }
 
+    /* ── Enrollment Progress Dots ── */
+    .enroll-progress {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin: 18px 0 12px;
+    }
+
+    .enroll-dot {
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      border: 2.5px solid rgba(14,77,146,.22);
+      background: transparent;
+      transition: all .4s cubic-bezier(.34,1.56,.64,1);
+      position: relative;
+    }
+
+    .enroll-dot.active {
+      border-color: var(--primary-light);
+      animation: dotPulse 1.2s ease-in-out infinite;
+    }
+
+    .enroll-dot.done {
+      border-color: var(--accent);
+      background: var(--accent);
+      box-shadow: 0 0 10px rgba(0,155,72,.35);
+      transform: scale(1.1);
+    }
+    .enroll-dot.done::after {
+      content: '\f00c';
+      font-family: 'Font Awesome 6 Free';
+      font-weight: 900;
+      font-size: 10px;
+      color: #fff;
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .enroll-dot.error {
+      border-color: var(--danger);
+      background: rgba(229,57,53,.15);
+    }
+
+    @keyframes dotPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(14,77,146,.3); }
+      50% { box-shadow: 0 0 0 8px rgba(14,77,146,0); }
+    }
+
+    .enroll-stage-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .enroll-stage-img {
+      display: none;
+      width: 120px; height: 140px;
+      object-fit: cover;
+      border-radius: 12px;
+      border: 2.5px solid var(--primary-light);
+      box-shadow: 0 4px 16px rgba(0,0,0,.12);
+      margin: 10px auto;
+      animation: fadeInScale .35s ease;
+    }
+    .enroll-stage-img.visible { display: block }
+
+    @keyframes fadeInScale {
+      from { opacity: 0; transform: scale(.85) }
+      to { opacity: 1; transform: scale(1) }
+    }
+
     /* ── Responsive ── */
     @media (max-width: 640px) {
       .maestros-grid { grid-template-columns: 1fr }
@@ -334,8 +408,16 @@ $user_rol    = $_SESSION['user_rol_nombre'] ?? '';
       <div class="modal-icon"><i class="fas fa-fingerprint"></i></div>
       <h2>Registrar Huella</h2>
       <p class="modal-sub" id="modal-teacher-name">Maestro</p>
+
+      <!-- Progress Dots -->
+      <div class="enroll-progress" id="enroll-progress"></div>
+      <div class="enroll-stage-label" id="enroll-stage-label"></div>
+
+      <!-- Preview de cada captura -->
+      <img id="enroll-stage-img" class="enroll-stage-img" alt="Captura" />
+
       <div id="fp-status"><span style="color:var(--text-muted)">Preparando escáner...</span></div>
-      <img id="fp-image" alt="Huella capturada" />
+      <img id="fp-image" alt="Huella final" />
       <div id="modal-result"></div>
       <button class="btn-close-modal" onclick="closeModal()">Cerrar</button>
     </div>
@@ -446,20 +528,102 @@ $user_rol    = $_SESSION['user_rol_nombre'] ?? '';
       document.getElementById('fp-image').style.display = 'none';
       document.getElementById('modal-result').innerHTML = '';
 
-      FP.enroll(maestroId, 'right-index-finger', (result) => {
+      // Reset progress dots (se crearán dinámicamente al saber total_stages)
+      var progressEl = document.getElementById('enroll-progress');
+      progressEl.innerHTML = '';
+      document.getElementById('enroll-stage-label').textContent = '';
+      var stageImg = document.getElementById('enroll-stage-img');
+      stageImg.classList.remove('visible');
+      stageImg.src = '';
+
+      var dotsCreated = false;
+      var totalStages = 6; // default, se actualizará
+
+      function createDots(total) {
+        if (dotsCreated) return;
+        dotsCreated = true;
+        totalStages = total;
+        var html = '';
+        for (var i = 1; i <= total; i++) {
+          html += '<span class="enroll-dot" id="dot-' + i + '"></span>';
+        }
+        progressEl.innerHTML = html;
+      }
+
+      function updateDot(stage, status) {
+        // status: 'active', 'done', 'error'
+        for (var i = 1; i <= totalStages; i++) {
+          var dot = document.getElementById('dot-' + i);
+          if (!dot) continue;
+          if (i < stage) {
+            dot.className = 'enroll-dot done';
+          } else if (i === stage) {
+            dot.className = 'enroll-dot ' + status;
+          } else {
+            dot.className = 'enroll-dot';
+          }
+        }
+      }
+
+      // onProgress callback
+      function onProgress(data) {
+        var total = data.total_stages || totalStages;
+        var stage = data.stage || 0;
+
+        if (!dotsCreated && total > 0) {
+          createDots(total);
+        }
+
+        var stageLabel = document.getElementById('enroll-stage-label');
+        var stageImgEl = document.getElementById('enroll-stage-img');
+
+        if (data.status === 'scanning') {
+          // Inicio de una etapa
+          stageLabel.textContent = 'Captura ' + stage + ' de ' + total;
+          updateDot(stage, 'active');
+        }
+
+        if (data.status === 'stage_complete') {
+          // Etapa completada
+          stageLabel.textContent = '✓ Captura ' + stage + ' de ' + total + ' completada';
+          updateDot(stage, 'done');
+
+          // Mostrar imagen de esta captura
+          if (data.imagen_base64) {
+            stageImgEl.src = 'data:image/bmp;base64,' + data.imagen_base64;
+            stageImgEl.classList.add('visible');
+          }
+        }
+
+        if (data.status === 'stage_retry') {
+          stageLabel.textContent = '⚠ Reintenta la captura ' + stage;
+          updateDot(stage, 'error');
+        }
+
+        if (data.status === 'complete') {
+          // Enrollment finalizado
+          stageLabel.textContent = '✅ Todas las capturas completadas';
+          updateDot(total, 'done');
+
+          if (data.imagen_base64) {
+            stageImgEl.src = 'data:image/bmp;base64,' + data.imagen_base64;
+            stageImgEl.classList.add('visible');
+          }
+        }
+      }
+
+      FP.enroll(maestroId, 'right-index-finger', function(result) {
         if (result.status === 'ok' && result.saved) {
           document.getElementById('modal-result').innerHTML =
-            `<div style="background:linear-gradient(135deg,rgba(0,155,72,.1),rgba(0,155,72,.05));color:var(--accent);padding:14px;border-radius:12px;margin-top:12px;font-weight:600;border:1px solid rgba(0,155,72,.2)">
-              <i class="fas fa-check-circle"></i> Huella guardada exitosamente
-            </div>`;
+            '<div style="background:linear-gradient(135deg,rgba(0,155,72,.1),rgba(0,155,72,.05));color:var(--accent);padding:14px;border-radius:12px;margin-top:12px;font-weight:600;border:1px solid rgba(0,155,72,.2)">' +
+            '<i class="fas fa-check-circle"></i> Huella guardada exitosamente</div>';
           setTimeout(loadMaestros, 1500);
         } else if (result.status === 'error') {
           document.getElementById('modal-result').innerHTML =
-            `<div style="background:rgba(229,57,53,.08);color:var(--danger);padding:14px;border-radius:12px;margin-top:12px;font-weight:600;border:1px solid rgba(229,57,53,.2)">
-              <i class="fas fa-times-circle"></i> ${result.message || 'Error al registrar'}
-            </div>`;
+            '<div style="background:rgba(229,57,53,.08);color:var(--danger);padding:14px;border-radius:12px;margin-top:12px;font-weight:600;border:1px solid rgba(229,57,53,.2)">' +
+            '<i class="fas fa-times-circle"></i> ' + (result.message || 'Error al registrar') + '</div>';
         }
-      });
+      }, onProgress);
     }
 
     function closeModal() {

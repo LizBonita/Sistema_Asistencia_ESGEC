@@ -134,6 +134,7 @@ def save_image(bmp_bytes, maestro_id, suffix=""):
 def do_enroll(maestro_id, dedo="right-index-finger", ws_send=None):
     """
     Realizar enrollment (registro de huella).
+    ws_send: callable async para enviar mensajes intermedios al frontend.
     Retorna dict con template_b64, imagen_b64, imagen_path.
     """
     global device
@@ -145,19 +146,65 @@ def do_enroll(maestro_id, dedo="right-index-finger", ws_send=None):
 
         template = FPrint.Print.new(device)
 
+        # Detectar número de etapas que requiere el escáner
+        total_stages = device.get_nr_enroll_stages()
+        if total_stages < 1:
+            total_stages = 5  # fallback
+
         # El enrollment necesita multiples capturas
         enrolled = False
         stage = 0
 
         while not enrolled:
             stage += 1
+
+            # Notificar al frontend el inicio de cada etapa
+            if ws_send:
+                try:
+                    ws_send(json.dumps({
+                        "status": "scanning",
+                        "action": "enroll",
+                        "stage": stage,
+                        "total_stages": total_stages,
+                        "message": "Captura {} de {} — Coloca tu dedo".format(stage, total_stages),
+                    }))
+                except:
+                    pass
+
             try:
                 enrolled = device.enroll_sync(template, None)
+
+                # Notificar al frontend que se completó esta etapa
+                if ws_send:
+                    try:
+                        ws_send(json.dumps({
+                            "status": "stage_complete",
+                            "action": "enroll",
+                            "stage": stage,
+                            "total_stages": total_stages,
+                            "message": "Captura {} completada".format(stage),
+                        }))
+                    except:
+                        pass
+
                 if enrolled:
                     break
             except GLib.Error as e:
                 error_str = str(e)
                 if "retry" in error_str.lower():
+                    # Notificar retry
+                    if ws_send:
+                        try:
+                            ws_send(json.dumps({
+                                "status": "stage_retry",
+                                "action": "enroll",
+                                "stage": stage,
+                                "total_stages": total_stages,
+                                "message": "Reintenta la captura {}".format(stage),
+                            }))
+                        except:
+                            pass
+                    stage -= 1  # No contar como etapa válida
                     continue
                 continue
 
@@ -169,14 +216,14 @@ def do_enroll(maestro_id, dedo="right-index-finger", ws_send=None):
             template_raw = bytes(template_bytes)
         template_b64 = base64.b64encode(template_raw).decode("ascii")
 
-        # ── Cerrar y reabrir limpio para capturar imagen ──
+        # ── Cerrar y reabrir limpio para capturar imagen final ──
         close_device()
         time.sleep(0.3)
         open_device()
 
         imagen_b64 = ""
         imagen_path = ""
-        print("[INFO] Pon tu dedo de nuevo para capturar imagen...")
+        print("[INFO] Pon tu dedo de nuevo para capturar imagen final...")
         try:
             img = device.capture_sync(True, None)
             if img:
@@ -195,6 +242,7 @@ def do_enroll(maestro_id, dedo="right-index-finger", ws_send=None):
         "imagen_base64": imagen_b64,
         "imagen_path": imagen_path,
         "etapas": stage,
+        "total_stages": total_stages,
     }
 
 
@@ -385,16 +433,45 @@ async def handler(websocket):
                     maestro_id = data.get("maestro_id", 0)
                     dedo = data.get("dedo", "right-index-finger")
 
+                    # Cola thread-safe para mensajes intermedios
+                    import queue
+                    msg_queue = queue.Queue()
+
+                    def ws_send_sync(msg):
+                        """Encolar mensaje para envio async."""
+                        msg_queue.put(msg)
+
                     # Avisar que empieza el enrollment
                     await websocket.send(json.dumps({
                         "status": "scanning",
-                        "message": "Pon tu dedo en el escaner (5 veces)...",
+                        "message": "Preparando escáner...",
                         "action": "enroll",
                     }))
 
-                    # Ejecutar enrollment en hilo separado
-                    result = await asyncio.to_thread(
-                        do_enroll, maestro_id, dedo)
+                    # Lanzar enrollment en hilo y hacer polling de mensajes
+                    loop = asyncio.get_event_loop()
+                    enroll_future = loop.run_in_executor(
+                        None, do_enroll, maestro_id, dedo, ws_send_sync)
+
+                    while not enroll_future.done():
+                        # Enviar mensajes encolados
+                        while not msg_queue.empty():
+                            try:
+                                queued_msg = msg_queue.get_nowait()
+                                await websocket.send(queued_msg)
+                            except:
+                                pass
+                        await asyncio.sleep(0.1)
+
+                    # Enviar mensajes restantes
+                    while not msg_queue.empty():
+                        try:
+                            queued_msg = msg_queue.get_nowait()
+                            await websocket.send(queued_msg)
+                        except:
+                            pass
+
+                    result = enroll_future.result()
                     await websocket.send(json.dumps(result))
 
                 elif action == "verify":

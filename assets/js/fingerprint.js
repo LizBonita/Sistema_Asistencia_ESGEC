@@ -103,14 +103,29 @@ const FP = {
    * Registrar huella de un maestro
    * @param {number} maestroId 
    * @param {string} dedo 
-   * @param {function} callback(result)
+   * @param {function} callback(result) - llamado al final
+   * @param {function} onProgress(data) - llamado en cada etapa
    */
-  enroll(maestroId, dedo, callback) {
-    this._setStatus('scanning', 'Pon tu dedo en el escáner (5 veces)...');
+  enroll(maestroId, dedo, callback, onProgress) {
+    this._setStatus('scanning', 'Preparando escáner...');
 
     this.onMessage = (data) => {
-      if (data.status === 'scanning') {
+      // Mensajes de progreso por etapa
+      if (data.status === 'scanning' && data.action === 'enroll') {
         this._setStatus('scanning', data.message);
+        if (onProgress) onProgress(data);
+        return;
+      }
+
+      if (data.status === 'stage_complete' && data.action === 'enroll') {
+        this._setStatus('scanning', data.message);
+        if (onProgress) onProgress(data);
+        return;
+      }
+
+      if (data.status === 'stage_retry' && data.action === 'enroll') {
+        this._setStatus('scanning', data.message);
+        if (onProgress) onProgress(data);
         return;
       }
 
@@ -120,6 +135,16 @@ const FP = {
         // Mostrar imagen si existe
         if (data.imagen_base64) {
           this._showImage(data.imagen_base64);
+        }
+
+        // Notificar progreso final
+        if (onProgress) {
+          onProgress({
+            status: 'complete',
+            stage: data.total_stages || data.etapas,
+            total_stages: data.total_stages || data.etapas,
+            imagen_base64: data.imagen_base64 || '',
+          });
         }
 
         // Guardar en backend PHP
