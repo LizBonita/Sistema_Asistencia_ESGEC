@@ -528,27 +528,29 @@ $user_rol    = $_SESSION['user_rol_nombre'] ?? '';
       document.getElementById('fp-image').style.display = 'none';
       document.getElementById('modal-result').innerHTML = '';
 
-      // Reset progress dots (se crearán dinámicamente al saber total_stages)
+      // Reset progress dots — crear 6 por defecto inmediatamente
       var progressEl = document.getElementById('enroll-progress');
-      progressEl.innerHTML = '';
-      document.getElementById('enroll-stage-label').textContent = '';
+      document.getElementById('enroll-stage-label').textContent = 'Preparando escáner...';
       var stageImg = document.getElementById('enroll-stage-img');
       stageImg.classList.remove('visible');
       stageImg.src = '';
 
+      var totalStages = 6; // default
       var dotsCreated = false;
-      var totalStages = 6; // default, se actualizará
 
       function createDots(total) {
-        if (dotsCreated) return;
-        dotsCreated = true;
         totalStages = total;
+        dotsCreated = true;
         var html = '';
         for (var i = 1; i <= total; i++) {
           html += '<span class="enroll-dot" id="dot-' + i + '"></span>';
         }
         progressEl.innerHTML = html;
       }
+
+      // Crear inmediatamente con 6 dots
+      createDots(6);
+      dotsCreated = false; // permitir re-crear si el agente indica otro total
 
       function updateDot(stage, status) {
         // status: 'active', 'done', 'error'
