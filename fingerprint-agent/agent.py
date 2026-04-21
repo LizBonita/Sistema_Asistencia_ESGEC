@@ -134,7 +134,7 @@ def save_image(bmp_bytes, maestro_id, suffix=""):
 def do_enroll(maestro_id, dedo="right-index-finger", ws_send=None):
     """
     Realizar enrollment (registro de huella).
-    ws_send: callable async para enviar mensajes intermedios al frontend.
+    ws_send: callable para enviar mensajes intermedios al frontend via queue.
     Retorna dict con template_b64, imagen_b64, imagen_path.
     """
     global device
@@ -151,62 +151,69 @@ def do_enroll(maestro_id, dedo="right-index-finger", ws_send=None):
         if total_stages < 1:
             total_stages = 5  # fallback
 
-        # El enrollment necesita multiples capturas
-        enrolled = False
-        stage = 0
+        print("[ENROLL] Iniciando enrollment: {} etapas requeridas".format(total_stages))
 
-        while not enrolled:
-            stage += 1
+        # Notificar inicio — primera captura
+        if ws_send:
+            try:
+                ws_send(json.dumps({
+                    "status": "scanning",
+                    "action": "enroll",
+                    "stage": 1,
+                    "total_stages": total_stages,
+                    "message": "Captura 1 de {} — Coloca tu dedo".format(total_stages),
+                }))
+            except:
+                pass
 
-            # Notificar al frontend el inicio de cada etapa
+        # ── Progress callback: libfprint lo llama después de CADA captura ──
+        def enroll_progress_cb(device, enroll_stage, fp_print, user_data=None):
+            """Callback llamado por libfprint después de cada captura individual."""
+            stage_num = enroll_stage + 1  # libfprint usa 0-indexed
+            print("[ENROLL] Progreso: etapa {} de {} completada".format(stage_num, total_stages))
+
             if ws_send:
+                # Notificar que esta etapa se completó
                 try:
                     ws_send(json.dumps({
-                        "status": "scanning",
+                        "status": "stage_complete",
                         "action": "enroll",
-                        "stage": stage,
+                        "stage": stage_num,
                         "total_stages": total_stages,
-                        "message": "Captura {} de {} — Coloca tu dedo".format(stage, total_stages),
+                        "message": "Captura {} completada".format(stage_num),
                     }))
                 except:
                     pass
 
-            try:
-                enrolled = device.enroll_sync(template, None)
-
-                # Notificar al frontend que se completó esta etapa
-                if ws_send:
+                # Si hay más etapas, notificar que espere la siguiente
+                if stage_num < total_stages:
                     try:
                         ws_send(json.dumps({
-                            "status": "stage_complete",
+                            "status": "scanning",
                             "action": "enroll",
-                            "stage": stage,
+                            "stage": stage_num + 1,
                             "total_stages": total_stages,
-                            "message": "Captura {} completada".format(stage),
+                            "message": "Captura {} de {} — Coloca tu dedo".format(
+                                stage_num + 1, total_stages),
                         }))
                     except:
                         pass
 
-                if enrolled:
-                    break
-            except GLib.Error as e:
-                error_str = str(e)
-                if "retry" in error_str.lower():
-                    # Notificar retry
-                    if ws_send:
-                        try:
-                            ws_send(json.dumps({
-                                "status": "stage_retry",
-                                "action": "enroll",
-                                "stage": stage,
-                                "total_stages": total_stages,
-                                "message": "Reintenta la captura {}".format(stage),
-                            }))
-                        except:
-                            pass
-                    stage -= 1  # No contar como etapa válida
-                    continue
-                continue
+        # ── enroll_sync CON progress callback ──
+        # enroll_sync(template, cancellable, progress_cb, progress_data)
+        try:
+            enrolled_print = device.enroll_sync(
+                template, None, enroll_progress_cb, None)
+        except TypeError:
+            # Fallback: si la versión de libfprint no soporta progress_cb
+            print("[ENROLL] WARN: progress_cb no soportado, usando modo simple")
+            enrolled_print = device.enroll_sync(template, None)
+        except GLib.Error as e:
+            print("[ENROLL] Error: {}".format(e))
+            close_device()
+            return {"status": "error", "message": str(e)}
+
+        print("[ENROLL] Enrollment completado exitosamente")
 
         # Serializar template
         template_bytes = template.serialize()
