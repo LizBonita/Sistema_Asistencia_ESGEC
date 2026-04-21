@@ -520,16 +520,9 @@ $user_rol    = $_SESSION['user_rol_nombre'] ?? '';
       });
     });
 
-    // Iniciar enrollment
-    // ── Enrollment con progreso visual ──
-    var _enrollTimer = null;
-    var _enrollDone = false;
-
+    // ── Enrollment con progreso visual (datos reales del agente) ──
     function startEnroll(maestroId, nombre) {
       currentMaestroId = maestroId;
-      _enrollDone = false;
-      if (_enrollTimer) { clearInterval(_enrollTimer); _enrollTimer = null; }
-
       document.getElementById('modal-teacher-name').textContent = nombre;
       document.getElementById('enroll-modal').classList.add('active');
       document.getElementById('fp-image').style.display = 'none';
@@ -537,26 +530,34 @@ $user_rol    = $_SESSION['user_rol_nombre'] ?? '';
       document.getElementById('enroll-stage-img').classList.remove('visible');
       document.getElementById('enroll-stage-img').src = '';
 
-      var TOTAL = 6;
+      // Ocultar fp-status (para no duplicar mensajes)
+      var fpStatus = document.getElementById('fp-status');
+      if (fpStatus) fpStatus.style.display = 'none';
+
       var progressEl = document.getElementById('enroll-progress');
       var stageLabel = document.getElementById('enroll-stage-label');
+      var TOTAL = 5; // default, se actualiza con el agente
 
-      // Crear dots inmediatamente
-      var dotsHtml = '';
-      for (var i = 1; i <= TOTAL; i++) dotsHtml += '<span class="enroll-dot" id="dot-' + i + '"></span>';
-      progressEl.innerHTML = dotsHtml;
+      // Crear dots
+      function buildDots(total) {
+        TOTAL = total;
+        var html = '';
+        for (var i = 1; i <= total; i++) html += '<span class="enroll-dot" id="dot-' + i + '"></span>';
+        progressEl.innerHTML = html;
+      }
+
+      buildDots(TOTAL);
       stageLabel.textContent = 'Coloca tu dedo en el escáner...';
+      // Dot 1 activo
+      var d1 = document.getElementById('dot-1');
+      if (d1) d1.className = 'enroll-dot active';
 
-      // Marcar dot 1 como activo
-      var currentDot = 1;
-      setDot(1, 'active');
-
-      function setDot(n, state) {
+      function setDots(currentStage, state) {
         for (var j = 1; j <= TOTAL; j++) {
           var d = document.getElementById('dot-' + j);
           if (!d) continue;
-          if (j < n) d.className = 'enroll-dot done';
-          else if (j === n) d.className = 'enroll-dot ' + state;
+          if (j < currentStage) d.className = 'enroll-dot done';
+          else if (j === currentStage) d.className = 'enroll-dot ' + state;
           else d.className = 'enroll-dot';
         }
       }
@@ -569,42 +570,44 @@ $user_rol    = $_SESSION['user_rol_nombre'] ?? '';
         stageLabel.textContent = '✅ Todas las capturas completadas';
       }
 
-      // ── Timer: avanza dots cada ~3.5s (simula progreso si el agente no envía etapas) ──
-      _enrollTimer = setInterval(function() {
-        if (_enrollDone || currentDot >= TOTAL) {
-          clearInterval(_enrollTimer);
-          return;
-        }
-        // Marcar actual como done y avanzar
-        setDot(currentDot, 'done');
-        currentDot++;
-        stageLabel.textContent = 'Captura ' + currentDot + ' de ' + TOTAL + ' — Coloca tu dedo';
-        setDot(currentDot, 'active');
-      }, 3500);
+      var enrollFinished = false;
 
-      // ── onProgress: si el agente envía etapas reales, sincroniza ──
+      // ── onProgress: responde a cada scan real del agente ──
       function onProgress(data) {
-        if (_enrollDone) return;
+        if (enrollFinished) return;
         var stage = data.stage || 0;
         var total = data.total_stages || TOTAL;
 
-        if (data.status === 'scanning' && stage > 0) {
-          currentDot = stage;
-          stageLabel.textContent = 'Captura ' + stage + ' de ' + total + ' — Coloca tu dedo';
-          setDot(stage, 'active');
+        // Si el agente reporta total diferente, recrear dots
+        if (total !== TOTAL && stage <= 2) {
+          buildDots(total);
         }
+
+        if (data.status === 'scanning' && stage > 0) {
+          stageLabel.textContent = 'Captura ' + stage + ' de ' + total + ' — Coloca tu dedo';
+          setDots(stage, 'active');
+        }
+
         if (data.status === 'stage_complete' && stage > 0) {
-          currentDot = stage + 1;
           stageLabel.textContent = '✓ Captura ' + stage + ' de ' + total + ' completada';
-          setDot(stage, 'done');
+          setDots(stage, 'done');
+          // Activar el siguiente dot después de un momento
           if (stage < total) {
-            setTimeout(function() { setDot(stage + 1, 'active'); }, 300);
+            var next = stage + 1;
+            setTimeout(function() {
+              if (!enrollFinished) {
+                stageLabel.textContent = 'Captura ' + next + ' de ' + total + ' — Coloca tu dedo';
+                setDots(next, 'active');
+              }
+            }, 400);
           }
         }
+
         if (data.status === 'stage_retry') {
-          stageLabel.textContent = '⚠ Reintenta — Coloca tu dedo de nuevo';
-          setDot(stage, 'error');
+          stageLabel.textContent = '⚠ Mala lectura — Coloca tu dedo de nuevo';
+          setDots(stage, 'error');
         }
+
         if (data.status === 'complete') {
           allDone();
         }
@@ -612,8 +615,7 @@ $user_rol    = $_SESSION['user_rol_nombre'] ?? '';
 
       // ── Callback final ──
       FP.enroll(maestroId, 'right-index-finger', function(result) {
-        _enrollDone = true;
-        if (_enrollTimer) { clearInterval(_enrollTimer); _enrollTimer = null; }
+        enrollFinished = true;
 
         if (result.status === 'ok' && result.saved) {
           allDone();
