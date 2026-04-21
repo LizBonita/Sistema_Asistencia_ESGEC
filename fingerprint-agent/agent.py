@@ -169,7 +169,7 @@ def do_enroll(maestro_id, dedo="right-index-finger", ws_send=None):
         # ── Progress callback: libfprint lo llama después de CADA captura ──
         def enroll_progress_cb(device, enroll_stage, fp_print, user_data=None, error=None):
             """Callback llamado por libfprint después de cada captura individual."""
-            stage_num = enroll_stage + 1  # libfprint usa 0-indexed
+            stage_num = enroll_stage  # enroll_stage = numero de etapas completadas (1-indexed)
             print("[ENROLL] Progreso: etapa {} de {} completada".format(stage_num, total_stages))
 
             if ws_send:
