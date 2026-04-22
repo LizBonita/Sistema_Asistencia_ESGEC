@@ -1132,10 +1132,6 @@ $mensaje = isset($_GET['message']) ? trim((string)$_GET['message']) : '';
                     <span>Modo noche</span>
                 </button>
 
-                <a href="modulos.php" class="header-link">
-                    <i class="fa-solid fa-layer-group"></i>
-                    Módulos
-                </a>
 
                 <a href="inicio.php" class="header-link">
                     <i class="fa-solid fa-arrow-left"></i>
@@ -1280,10 +1276,10 @@ $mensaje = isset($_GET['message']) ? trim((string)$_GET['message']) : '';
                                             </td>
                                             <td>
                                                 <div class="actions-cell">
-                                                    <a class="btn-table btn-edit" href="editar_materia.php?id=<?php echo $id; ?>">
+                                                    <button type="button" class="btn-table btn-edit" onclick="openEditModal(<?php echo $id; ?>, '<?php echo addslashes(htmlspecialchars($nombre, ENT_QUOTES, 'UTF-8')); ?>')">
                                                         <i class="fa-solid fa-pen-to-square"></i>
                                                         Editar
-                                                    </a>
+                                                    </button>
 
                                                     <a
                                                         class="btn-table btn-delete"
@@ -1330,10 +1326,10 @@ $mensaje = isset($_GET['message']) ? trim((string)$_GET['message']) : '';
                                 </div>
 
                                 <div class="mobile-actions">
-                                    <a class="btn-table btn-edit" href="editar_materia.php?id=<?php echo $id; ?>">
+                                    <button type="button" class="btn-table btn-edit" onclick="openEditModal(<?php echo $id; ?>, '<?php echo addslashes(htmlspecialchars($nombre, ENT_QUOTES, 'UTF-8')); ?>')">
                                         <i class="fa-solid fa-pen-to-square"></i>
                                         Editar
-                                    </a>
+                                    </button>
 
                                     <a
                                         class="btn-table btn-delete"
@@ -1405,6 +1401,47 @@ $mensaje = isset($_GET['message']) ? trim((string)$_GET['message']) : '';
                 </form>
 
                 <div id="modalMessage" class="modal-message"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL EDITAR -->
+    <div id="editMateriaModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>
+                    <i class="fa-solid fa-pen-to-square"></i>
+                    Editar materia
+                </h3>
+                <button type="button" class="modal-close" id="closeEditModalBtn">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p class="modal-description">Modifica el nombre de la materia seleccionada.</p>
+                <form id="editMateriaForm" method="POST" action="../controllers/ActualizarMateriaController.php">
+                    <input type="hidden" name="id" id="edit_materia_id">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="edit_nombre">Nombre de la materia</label>
+                            <div class="input-wrap">
+                                <i class="fa-solid fa-book-open"></i>
+                                <input type="text" name="nombre_materia" id="edit_nombre" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="submit" class="btn-main" id="editSubmitBtn">
+                            <i class="fa-solid fa-save"></i>
+                            Guardar cambios
+                        </button>
+                        <button type="button" class="btn-secondary" id="cancelEditModalBtn">
+                            <i class="fa-solid fa-ban"></i>
+                            Cancelar
+                        </button>
+                    </div>
+                </form>
+                <div id="editModalMessage" class="modal-message"></div>
             </div>
         </div>
     </div>
@@ -1589,6 +1626,73 @@ $mensaje = isset($_GET['message']) ? trim((string)$_GET['message']) : '';
                     }, 3000);
 
                     form.submit();
+                });
+            }
+            // ── MODAL EDITAR ──
+            const editModal = document.getElementById('editMateriaModal');
+            const closeEditModalBtn = document.getElementById('closeEditModalBtn');
+            const cancelEditModalBtn = document.getElementById('cancelEditModalBtn');
+            const editForm = document.getElementById('editMateriaForm');
+            const editModalMessage = document.getElementById('editModalMessage');
+            const editSubmitBtn = document.getElementById('editSubmitBtn');
+
+            window.openEditModal = function(id, nombre) {
+                document.getElementById('edit_materia_id').value = id;
+                document.getElementById('edit_nombre').value = nombre;
+                if (editModalMessage) { editModalMessage.style.display = 'none'; }
+                editModal.classList.add('active');
+                document.body.style.overflow = 'hidden';
+                setTimeout(() => document.getElementById('edit_nombre').focus(), 80);
+            };
+
+            function closeEditModal() {
+                editModal.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+
+            if (closeEditModalBtn) closeEditModalBtn.addEventListener('click', closeEditModal);
+            if (cancelEditModalBtn) cancelEditModalBtn.addEventListener('click', closeEditModal);
+            if (editModal) editModal.addEventListener('click', e => { if (e.target === editModal) closeEditModal(); });
+            document.addEventListener('keydown', e => { if (e.key === 'Escape' && editModal && editModal.classList.contains('active')) closeEditModal(); });
+
+            if (editForm) {
+                editForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    const origHTML = editSubmitBtn.innerHTML;
+                    editSubmitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+                    editSubmitBtn.disabled = true;
+
+                    const iframe = document.createElement('iframe');
+                    iframe.name = 'edit-materia-target-' + Date.now();
+                    iframe.style.display = 'none';
+                    document.body.appendChild(iframe);
+                    editForm.target = iframe.name;
+                    let handled = false;
+
+                    function onDone() {
+                        if (handled) return; handled = true;
+                        editModalMessage.textContent = '✅ Materia actualizada. Recargando...';
+                        editModalMessage.className = 'modal-message success';
+                        editModalMessage.style.display = 'block';
+                        setTimeout(() => { closeEditModal(); location.reload(); }, 1200);
+                    }
+                    function onErr() {
+                        if (handled) return; handled = true;
+                        editModalMessage.textContent = 'Error al actualizar. Verifica e inténtalo de nuevo.';
+                        editModalMessage.className = 'modal-message error';
+                        editModalMessage.style.display = 'block';
+                        editSubmitBtn.disabled = false;
+                        editSubmitBtn.innerHTML = origHTML;
+                    }
+                    iframe.onload = function() {
+                        try {
+                            const t = (iframe.contentDocument.body.textContent || '').toLowerCase();
+                            t.includes('error') || t.includes('denegado') ? onErr() : onDone();
+                        } catch(x) { onDone(); }
+                        finally { setTimeout(() => iframe.remove(), 1000); }
+                    };
+                    setTimeout(() => { if (!handled) onDone(); }, 3000);
+                    editForm.submit();
                 });
             }
         });

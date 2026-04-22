@@ -987,10 +987,6 @@ $periodoBonito = formatearFechaBonita($start_date_str) . ' - ' . formatearFechaB
                     <span>Modo noche</span>
                 </button>
 
-                <a href="modulos.php" class="header-link">
-                    <i class="fa-solid fa-layer-group"></i>
-                    Módulos
-                </a>
 
                 <a href="inicio.php" class="header-link">
                     <i class="fa-solid fa-arrow-left"></i>

@@ -1146,10 +1146,6 @@ $mensaje = isset($_GET['message']) ? trim((string) $_GET['message']) : '';
                     <span>Modo noche</span>
                 </button>
 
-                <a href="modulos.php" class="header-link">
-                    <i class="fa-solid fa-layer-group"></i>
-                    Módulos
-                </a>
 
                 <a href="inicio.php" class="header-link">
                     <i class="fa-solid fa-arrow-left"></i>
@@ -1290,10 +1286,10 @@ $mensaje = isset($_GET['message']) ? trim((string) $_GET['message']) : '';
                                             </td>
                                             <td>
                                                 <div class="actions-cell">
-                                                    <a class="btn-table btn-edit" href="editar_usuario.php?id=<?php echo $id; ?>">
+                                                    <button type="button" class="btn-table btn-edit" onclick="openEditModal(<?php echo $id; ?>, '<?php echo addslashes(htmlspecialchars($nombreCompleto, ENT_QUOTES, 'UTF-8')); ?>', '<?php echo addslashes(htmlspecialchars($usuarioNombre, ENT_QUOTES, 'UTF-8')); ?>', <?php echo (int)$row['rol_id']; ?>)">
                                                         <i class="fa-solid fa-pen-to-square"></i>
                                                         Editar
-                                                    </a>
+                                                    </button>
 
                                                     <a
                                                         class="btn-table btn-delete"
@@ -1368,10 +1364,10 @@ $mensaje = isset($_GET['message']) ? trim((string) $_GET['message']) : '';
                                 </div>
 
                                 <div class="mobile-actions">
-                                    <a class="btn-table btn-edit" href="editar_usuario.php?id=<?php echo $id; ?>">
+                                    <button type="button" class="btn-table btn-edit" onclick="openEditModal(<?php echo $id; ?>, '<?php echo addslashes(htmlspecialchars($nombreCompleto, ENT_QUOTES, 'UTF-8')); ?>', '<?php echo addslashes(htmlspecialchars($usuarioNombre, ENT_QUOTES, 'UTF-8')); ?>', <?php echo (int)$row['rol_id']; ?>)">
                                         <i class="fa-solid fa-pen-to-square"></i>
                                         Editar
-                                    </a>
+                                    </button>
 
                                     <a
                                         class="btn-table btn-delete"
@@ -1477,6 +1473,55 @@ $mensaje = isset($_GET['message']) ? trim((string) $_GET['message']) : '';
                 </form>
 
                 <div class="modal-message" id="modalMessage"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL EDITAR USUARIO -->
+    <div id="editUserModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-user-edit"></i> Editar usuario</h3>
+                <button type="button" class="modal-close" id="closeEditModalBtn"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <p class="modal-description">Modifica los datos del usuario. La contraseña no se edita aquí por seguridad.</p>
+                <form id="editUserForm" method="POST" action="../controllers/ActualizarUsuarioController.php">
+                    <input type="hidden" name="id" id="edit_user_id">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="edit_nombre_completo">Nombre completo</label>
+                            <div class="input-wrap">
+                                <i class="fa-solid fa-id-card"></i>
+                                <input type="text" name="nombre_completo" id="edit_nombre_completo" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit_usuario">Nombre de usuario</label>
+                            <div class="input-wrap">
+                                <i class="fa-solid fa-user"></i>
+                                <input type="text" name="usuario" id="edit_usuario" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit_rol_id">Rol</label>
+                            <div class="input-wrap">
+                                <i class="fa-solid fa-user-tag"></i>
+                                <select name="rol_id" id="edit_rol_id" required>
+                                    <option value="">Seleccionar rol...</option>
+                                    <?php foreach ($roles as $rol): ?>
+                                        <option value="<?php echo (int)$rol['id']; ?>"><?php echo htmlspecialchars($rol['nombre'], ENT_QUOTES, 'UTF-8'); ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="submit" class="btn-main" id="editSubmitBtn"><i class="fa-solid fa-save"></i> Guardar cambios</button>
+                        <button type="button" class="btn-secondary" id="cancelEditModalBtn"><i class="fa-solid fa-ban"></i> Cancelar</button>
+                    </div>
+                </form>
+                <div id="editModalMessage" class="modal-message"></div>
             </div>
         </div>
     </div>
@@ -1672,6 +1717,45 @@ $mensaje = isset($_GET['message']) ? trim((string) $_GET['message']) : '';
                             onSuccess();
                         }
                     }, 2800);
+                });
+            }
+            // ── MODAL EDITAR USUARIO ──
+            const editModal = document.getElementById('editUserModal');
+            const editForm = document.getElementById('editUserForm');
+            const editModalMessage = document.getElementById('editModalMessage');
+            const editSubmitBtn = document.getElementById('editSubmitBtn');
+
+            window.openEditModal = function(id, nombre, usuario, rolId) {
+                document.getElementById('edit_user_id').value = id;
+                document.getElementById('edit_nombre_completo').value = nombre;
+                document.getElementById('edit_usuario').value = usuario;
+                document.getElementById('edit_rol_id').value = rolId;
+                if (editModalMessage) editModalMessage.style.display = 'none';
+                editModal.classList.add('active');
+                document.body.style.overflow = 'hidden';
+                setTimeout(() => document.getElementById('edit_nombre_completo').focus(), 80);
+            };
+            function closeEditModal() { editModal.classList.remove('active'); document.body.style.overflow = ''; }
+            document.getElementById('closeEditModalBtn').addEventListener('click', closeEditModal);
+            document.getElementById('cancelEditModalBtn').addEventListener('click', closeEditModal);
+            editModal.addEventListener('click', e => { if (e.target === editModal) closeEditModal(); });
+            document.addEventListener('keydown', e => { if (e.key === 'Escape' && editModal.classList.contains('active')) closeEditModal(); });
+
+            if (editForm) {
+                editForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    const origHTML = editSubmitBtn.innerHTML;
+                    editSubmitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+                    editSubmitBtn.disabled = true;
+                    const iframe = document.createElement('iframe');
+                    iframe.name = 'edit-user-' + Date.now(); iframe.style.display = 'none';
+                    document.body.appendChild(iframe); editForm.target = iframe.name;
+                    let handled = false;
+                    function onDone() { if (handled) return; handled = true; editModalMessage.textContent = '✅ Usuario actualizado.'; editModalMessage.className = 'modal-message success'; editModalMessage.style.display = 'block'; setTimeout(() => { closeEditModal(); location.reload(); }, 1200); }
+                    function onErr() { if (handled) return; handled = true; editModalMessage.textContent = 'Error al actualizar.'; editModalMessage.className = 'modal-message error'; editModalMessage.style.display = 'block'; editSubmitBtn.disabled = false; editSubmitBtn.innerHTML = origHTML; }
+                    iframe.onload = function() { try { const t = (iframe.contentDocument.body.textContent||'').toLowerCase(); t.includes('error')||t.includes('denegado') ? onErr() : onDone(); } catch(x) { onDone(); } finally { setTimeout(() => iframe.remove(), 1000); } };
+                    setTimeout(() => { if (!handled) onDone(); }, 3000);
+                    editForm.submit();
                 });
             }
         });
