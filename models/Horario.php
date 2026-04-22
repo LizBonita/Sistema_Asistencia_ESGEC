@@ -1,7 +1,7 @@
 <?php
 class Horario {
 
-    private $conn;
+    public $conn;
     private $table_name = "horarios";
 
     // Propiedades que coinciden con la tabla
@@ -17,6 +17,29 @@ class Horario {
 
     public function __construct($db){
         $this->conn = $db;
+    }
+
+    // Crear un horario
+    public function create(){
+        $query = "INSERT INTO " . $this->table_name . " 
+                  (maestro_id, materia_id, grupo_id, dia_semana, hora_inicio, hora_fin, tolerancia_entrada, limite_retardo)
+                  VALUES (:maestro_id, :materia_id, :grupo_id, :dia_semana, :hora_inicio, :hora_fin, :tolerancia_entrada, :limite_retardo)";
+
+        $stmt = $this->conn->prepare($query);
+
+        $stmt->bindParam(':maestro_id', $this->maestro_id);
+        $stmt->bindParam(':materia_id', $this->materia_id);
+        $stmt->bindParam(':grupo_id', $this->grupo_id);
+        $stmt->bindParam(':dia_semana', $this->dia_semana);
+        $stmt->bindParam(':hora_inicio', $this->hora_inicio);
+        $stmt->bindParam(':hora_fin', $this->hora_fin);
+        $stmt->bindParam(':tolerancia_entrada', $this->tolerancia_entrada);
+        $stmt->bindParam(':limite_retardo', $this->limite_retardo);
+
+        if($stmt->execute()){
+            return true;
+        }
+        return false;
     }
 
     // Leer horarios

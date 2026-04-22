@@ -57,11 +57,11 @@ try {
     $check_grupo = $db->prepare("SELECT id FROM grupos WHERE id = ?");
     $check_grupo->execute([$grupo_id]);
     if ($check_grupo->rowCount() === 0) {
-        header('Location: ../views/estion_horarios_por_maestro.php?message=❌ Error: El grupo seleccionado no existe.');
+        header('Location: ../views/gestion_horarios_por_maestro.php?message=❌ Error: El grupo seleccionado no existe.');
         exit();
     }
 } catch (Exception $e) {
-    header('Location: ../views/estion_horarios_por_maestro.php?message=❌ Error interno: ' . urlencode($e->getMessage()));
+    header('Location: ../views/gestion_horarios_por_maestro.php?message=❌ Error interno: ' . urlencode($e->getMessage()));
     exit();
 }
 
@@ -80,6 +80,6 @@ if ($horario->create()) {
     header('Location: ../views/gestion_horarios_por_maestro.php?message=✅ Horario guardado correctamente!');
 } else {
     $err = $horario->conn->errorInfo();
-    header('Location: ../views/estion_horarios_por_maestro.php?message=❌ Error SQL: ' . urlencode($err[2]));
+    header('Location: ../views/gestion_horarios_por_maestro.php?message=❌ Error SQL: ' . urlencode($err[2]));
 }
 ?>
