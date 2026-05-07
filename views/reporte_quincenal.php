@@ -31,7 +31,7 @@ $logoSecretariaError = '';
 if (file_exists($logoEscuelaPath)) {
     $imageData = file_get_contents($logoEscuelaPath);
     if ($imageData !== false) {
-        $logoEscuelaBase64 = 'image/png;base64,' . base64_encode($imageData);
+        $logoEscuelaBase64 = 'data:image/png;base64,' . base64_encode($imageData);
     } else {
         $logoEscuelaError = 'No se pudo leer el archivo';
     }
@@ -42,7 +42,7 @@ if (file_exists($logoEscuelaPath)) {
 if (file_exists($logoSecretariaPath)) {
     $imageData = file_get_contents($logoSecretariaPath);
     if ($imageData !== false) {
-        $logoSecretariaBase64 = 'image/png;base64,' . base64_encode($imageData);
+        $logoSecretariaBase64 = 'data:image/png;base64,' . base64_encode($imageData);
     } else {
         $logoSecretariaError = 'No se pudo leer el archivo';
     }
@@ -1297,84 +1297,91 @@ console.log('Logo Secretaría:', reporteData.logoSecretaria ? '✅ Cargado (' + 
 function exportarPDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF('p', 'mm', 'letter');
+    const pageW = doc.internal.pageSize.getWidth();
+    const pageH = doc.internal.pageSize.getHeight();
+    const centerX = pageW / 2;
 
     const colorAzul = [14, 77, 146];
     const colorVerde = [0, 155, 72];
+    const colorTexto = [50, 50, 50];
+    const colorGris = [100, 100, 100];
+    const colorGrisClaro = [150, 150, 150];
 
+    // === MARCA DE AGUA (logo escuela al centro, muy tenue) ===
     try {
         if (reporteData.logoEscuela && reporteData.logoEscuela.length > 100) {
-            doc.addImage(reporteData.logoEscuela, 'PNG', 50, 80, 110, 110, undefined, 'FAST', 0.08);
-            console.log('✅ Marca de agua agregada');
-        } else {
-            console.warn('⚠️ Logo escuela no válido para marca de agua');
+            const wmW = 100, wmH = 100;
+            doc.setGState(new doc.GState({opacity: 0.06}));
+            doc.addImage(reporteData.logoEscuela, 'PNG', (pageW - wmW) / 2, (pageH - wmH) / 2 - 10, wmW, wmH);
+            doc.setGState(new doc.GState({opacity: 1}));
         }
     } catch(e) {
-        console.error('❌ Error marca de agua:', e);
+        console.error('Error marca de agua:', e);
     }
 
+    // === LOGOS EN ENCABEZADO ===
+    const logoSize = 22;
+    const logoY = 12;
+
+    // Logo escuela (izquierda)
     try {
         if (reporteData.logoEscuela && reporteData.logoEscuela.length > 100) {
-            doc.addImage(reporteData.logoEscuela, 'PNG', 14, 14, 25, 25);
-            console.log('✅ Logo escuela agregado al encabezado');
-        } else {
-            console.warn('⚠️ Logo escuela no válido');
-            doc.setDrawColor(200, 200, 200);
-            doc.rect(14, 14, 25, 25, 'S');
-            doc.setFontSize(6);
-            doc.text('LOGO', 26.5, 28, { align: 'center' });
+            doc.addImage(reporteData.logoEscuela, 'PNG', 14, logoY, logoSize, logoSize);
         }
     } catch(e) {
-        console.error('❌ Error logo escuela:', e);
+        console.error('Error logo escuela:', e);
     }
 
+    // Logo secretaría (derecha)
     try {
         if (reporteData.logoSecretaria && reporteData.logoSecretaria.length > 100) {
-            doc.addImage(reporteData.logoSecretaria, 'PNG', 170, 14, 25, 25);
-            console.log('✅ Logo secretaría agregado al encabezado');
-        } else {
-            console.warn('⚠️ Logo secretaría no válido');
-            doc.setDrawColor(200, 200, 200);
-            doc.rect(170, 14, 25, 25, 'S');
-            doc.setFontSize(6);
-            doc.text('LOGO', 182.5, 28, { align: 'center' });
+            doc.addImage(reporteData.logoSecretaria, 'PNG', pageW - 14 - logoSize, logoY, logoSize * 2.2, logoSize * 0.65);
         }
     } catch(e) {
-        console.error('❌ Error logo secretaría:', e);
+        console.error('Error logo secretaría:', e);
     }
 
-    doc.setTextColor(50, 50, 50);
+    // === TEXTO DEL MEMBRETE ===
+    doc.setTextColor(...colorTexto);
     doc.setFontSize(8);
     doc.setFont('helvetica', 'bold');
-    doc.text('GOBIERNO DEL ESTADO LIBRE Y SOBERANO DE GUERRERO', 105, 18, { align: 'center' });
+    doc.text('GOBIERNO DEL ESTADO LIBRE Y SOBERANO DE GUERRERO', centerX, 16, { align: 'center' });
 
     doc.setFontSize(7);
     doc.setFont('helvetica', 'normal');
-    doc.text('SECRETARÍA DE EDUCACIÓN', 105, 23, { align: 'center' });
+    doc.text('SECRETARÍA DE EDUCACIÓN', centerX, 21, { align: 'center' });
 
     doc.setFontSize(6);
-    doc.text('SUBSECRETARÍA DE EDUCACIÓN BÁSICA', 105, 27, { align: 'center' });
-    doc.text('DIRECCIÓN GENERAL DE EDUCACIÓN SECUNDARIA', 105, 31, { align: 'center' });
-    doc.text('DEPARTAMENTO DE SECUNDARIAS GENERALES', 105, 35, { align: 'center' });
+    doc.text('SUBSECRETARÍA DE EDUCACIÓN BÁSICA', centerX, 25, { align: 'center' });
+    doc.text('DIRECCIÓN GENERAL DE EDUCACIÓN SECUNDARIA', centerX, 29, { align: 'center' });
+    doc.text('DEPARTAMENTO DE SECUNDARIAS GENERALES', centerX, 33, { align: 'center' });
 
     doc.setFontSize(7);
     doc.setFont('helvetica', 'bold');
-    doc.text('ESCUELA SECUNDARIA GENERAL "EMPERADOR CUAUHTÉMOC"', 105, 40, { align: 'center' });
+    doc.text('ESCUELA SECUNDARIA GENERAL "EMPERADOR CUAUHTÉMOC"', centerX, 38, { align: 'center' });
+    doc.setFontSize(5.5);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...colorGris);
+    doc.text('C.C.T. 12DES0020I', centerX, 42, { align: 'center' });
 
+    // === LÍNEA SEPARADORA VERDE ===
     doc.setDrawColor(...colorVerde);
-    doc.setLineWidth(0.5);
-    doc.line(14, 44, 196, 44);
+    doc.setLineWidth(0.6);
+    doc.line(14, 45, pageW - 14, 45);
 
-    doc.setFontSize(10);
+    // === TÍTULO DEL REPORTE ===
+    doc.setFontSize(11);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(...colorAzul);
-    doc.text('REPORTE QUINCENAL DE RETARDOS', 105, 52, { align: 'center' });
+    doc.text('REPORTE QUINCENAL DE RETARDOS', centerX, 53, { align: 'center' });
 
     doc.setFontSize(8);
     doc.setFont('helvetica', 'normal');
-    doc.setTextColor(100, 100, 100);
-    doc.text(`Periodo: ${formatearFecha(reporteData.fechaInicio)} al ${formatearFecha(reporteData.fechaFin)}`, 105, 58, { align: 'center' });
-    doc.text(`Fecha de emisión: ${new Date().toLocaleDateString('es-MX')}`, 105, 63, { align: 'center' });
+    doc.setTextColor(...colorGris);
+    doc.text(`Periodo: ${formatearFecha(reporteData.fechaInicio)} al ${formatearFecha(reporteData.fechaFin)}`, centerX, 59, { align: 'center' });
+    doc.text(`Fecha de emisión: ${new Date().toLocaleDateString('es-MX')}`, centerX, 64, { align: 'center' });
 
+    // === TABLA DE DATOS ===
     const tableColumn = ['#', 'Nombre del Maestro', 'Minutos Acumulados', 'Días con Retraso', 'Promedio'];
     const tableRows = [];
 
@@ -1393,7 +1400,7 @@ function exportarPDF() {
     doc.autoTable({
         head: [tableColumn],
         body: tableRows,
-        startY: 69,
+        startY: 70,
         theme: 'striped',
         headStyles: {
             fillColor: colorAzul,
@@ -1402,56 +1409,66 @@ function exportarPDF() {
             fontSize: 8
         },
         bodyStyles: { fontSize: 8 },
-        alternateRowStyles: { fillColor: [250, 250, 250] },
+        alternateRowStyles: { fillColor: [245, 248, 252] },
         margin: { left: 14, right: 14 },
         didDrawPage: function(data) {
+            // Pie de página en cada hoja
             doc.setFontSize(7);
-            doc.setTextColor(150, 150, 150);
-            doc.text('Página ' + data.pageNumber, 105, 285, { align: 'center' });
+            doc.setTextColor(...colorGrisClaro);
+            doc.text('Página ' + data.pageNumber, centerX, pageH - 8, { align: 'center' });
         }
     });
 
-    const finalY = doc.lastAutoTable.finalY + 10;
+    // === ZONA POST-TABLA ===
+    const finalY = doc.lastAutoTable.finalY + 8;
+
+    // Línea separadora
     doc.setDrawColor(...colorAzul);
-    doc.line(14, finalY, 196, finalY);
+    doc.setLineWidth(0.3);
+    doc.line(14, finalY, pageW - 14, finalY);
 
+    // Nota automática
     doc.setFontSize(7);
-    doc.setTextColor(100, 100, 100);
-    doc.text('Este reporte es generado automáticamente por el Sistema de Control de Asistencia.', 105, finalY + 5, { align: 'center' });
-    doc.text('Ciclo Escolar ' + new Date().getFullYear(), 105, finalY + 9, { align: 'center' });
+    doc.setTextColor(...colorGris);
+    doc.text('Este reporte es generado automáticamente por el Sistema de Control de Asistencia.', centerX, finalY + 5, { align: 'center' });
+    doc.text('Ciclo Escolar ' + new Date().getFullYear(), centerX, finalY + 9, { align: 'center' });
 
-    const firmaY = finalY + 20;
-    doc.setDrawColor(150, 150, 150);
+    // === FIRMAS ===
+    const firmaY = finalY + 25;
+    doc.setDrawColor(...colorGrisClaro);
+    doc.setLineWidth(0.3);
 
-    doc.line(20, firmaY, 80, firmaY);
+    // Firma Director (izquierda)
+    doc.line(25, firmaY, 85, firmaY);
     doc.setFontSize(8);
-    doc.setTextColor(50, 50, 50);
-    doc.text('___________________________', 50, firmaY + 4, { align: 'center' });
-    doc.text('DIRECTOR', 50, firmaY + 9, { align: 'center' });
+    doc.setTextColor(...colorTexto);
+    doc.setFont('helvetica', 'bold');
+    doc.text('DIRECTOR(A)', 55, firmaY + 5, { align: 'center' });
 
-    doc.line(130, firmaY, 190, firmaY);
-    doc.text('___________________________', 160, firmaY + 4, { align: 'center' });
-    doc.text('SUBDIRECTOR', 160, firmaY + 9, { align: 'center' });
+    // Firma Subdirector (derecha)
+    doc.line(pageW - 85, firmaY, pageW - 25, firmaY);
+    doc.text('SUBDIRECTOR(A)', pageW - 55, firmaY + 5, { align: 'center' });
 
+    // Sello oficial (centro)
     doc.setDrawColor(...colorVerde);
     doc.setLineWidth(0.5);
-    doc.circle(105, firmaY + 6, 12, 'S');
-    doc.setFontSize(6);
+    doc.circle(centerX, firmaY - 2, 12, 'S');
+    doc.setFontSize(5.5);
     doc.setTextColor(...colorVerde);
-    doc.setFont('helvetica', 'bold');
-    doc.text('OFICIAL', 105, firmaY + 4, { align: 'center' });
-    doc.text('SELLO', 105, firmaY + 8, { align: 'center' });
+    doc.text('SELLO', centerX, firmaY - 3, { align: 'center' });
+    doc.text('OFICIAL', centerX, firmaY + 1, { align: 'center' });
 
+    // === PIE DE PÁGINA ===
     doc.setFontSize(6);
-    doc.setTextColor(150, 150, 150);
+    doc.setTextColor(...colorGrisClaro);
     doc.setFont('helvetica', 'normal');
-    doc.text('Calle Josefa Ortiz de Domínguez No.37, Barrio de tierra blanca C.P. 40430 Ixcateopan de Cuauhtémoc, Gro.', 105, 292, { align: 'center' });
-    doc.text('TEL. (736) 36 6-91-18', 105, 295, { align: 'center' });
+    doc.text('Calle Josefa Ortiz de Domínguez No.37, Barrio de Tierra Blanca C.P. 40430 Ixcateopan de Cuauhtémoc, Gro.', centerX, pageH - 14, { align: 'center' });
+    doc.text('TEL. (736) 36 6-91-18', centerX, pageH - 11, { align: 'center' });
 
+    // Código de verificación
     const codigoUnico = 'RPT-' + reporteData.fechaInicio.replace(/-/g, '') + '-' + Date.now().toString().substr(-6);
-    doc.setFontSize(6);
-    doc.setTextColor(100, 100, 100);
-    doc.text(`Código de verificación: ${codigoUnico}`, 14, 292);
+    doc.setFontSize(5.5);
+    doc.text(`Código: ${codigoUnico}`, 14, pageH - 14);
 
     doc.save(`Reporte_Retardos_${reporteData.fechaInicio}_al_${reporteData.fechaFin}.pdf`);
 }
@@ -1460,51 +1477,57 @@ function exportarPDF() {
 function exportarExcel() {
     const wb = XLSX.utils.book_new();
 
-    const datosExcel = reporteData.maestros.map((row, index) => ({
-        '#': index + 1,
-        'Maestro': row.nombre_maestro,
-        'Minutos Acumulados': row.minutos_acumulados,
-        'Días con Retraso': row.dias_con_retraso,
-        'Promedio (min/día)': row.dias_con_retraso > 0 ? (row.minutos_acumulados / row.dias_con_retraso).toFixed(1) : 0
-    }));
+    // === HOJA 1: Membrete + Datos ===
+    const headerRows = [
+        ['', 'GOBIERNO DEL ESTADO LIBRE Y SOBERANO DE GUERRERO', '', '', ''],
+        ['', 'SECRETARÍA DE EDUCACIÓN', '', '', ''],
+        ['', 'SUBSECRETARÍA DE EDUCACIÓN BÁSICA', '', '', ''],
+        ['', 'ESC. SEC. GRAL. "EMPERADOR CUAUHTÉMOC" C.C.T. 12DES0020I', '', '', ''],
+        [''],
+        ['', 'REPORTE QUINCENAL DE RETARDOS', '', '', ''],
+        ['', `Periodo: ${formatearFecha(reporteData.fechaInicio)} al ${formatearFecha(reporteData.fechaFin)}`, '', '', ''],
+        ['', `Fecha de emisión: ${new Date().toLocaleDateString('es-MX')}`, '', '', ''],
+        [''],
+        ['#', 'Nombre del Maestro', 'Minutos Acumulados', 'Días con Retraso', 'Promedio (min/día)']
+    ];
+
+    const dataRows = reporteData.maestros.map((row, index) => [
+        index + 1,
+        row.nombre_maestro,
+        parseInt(row.minutos_acumulados),
+        parseInt(row.dias_con_retraso),
+        row.dias_con_retraso > 0 ? parseFloat((row.minutos_acumulados / row.dias_con_retraso).toFixed(1)) : 0
+    ]);
 
     const totalMinutos = reporteData.maestros.reduce((sum, row) => sum + parseInt(row.minutos_acumulados), 0);
     const totalDias = reporteData.maestros.reduce((sum, row) => sum + parseInt(row.dias_con_retraso), 0);
 
-    datosExcel.push({
-        '#': 'TOTAL',
-        'Maestro': '',
-        'Minutos Acumulados': totalMinutos,
-        'Días con Retraso': totalDias,
-        'Promedio (min/día)': ''
-    });
+    dataRows.push(['TOTAL', '', totalMinutos, totalDias, '']);
 
-    const ws = XLSX.utils.json_to_sheet(datosExcel);
+    const allRows = [...headerRows, ...dataRows];
+    const ws = XLSX.utils.aoa_to_sheet(allRows);
 
-    const range = XLSX.utils.decode_range(ws['!ref']);
-    for (let C = range.s.c; C <= range.e.c; ++C) {
-        const address = XLSX.utils.encode_col(C) + "1";
-        if (!ws[address]) continue;
-        ws[address].s = {
-            font: { bold: true, color: { rgb: "FFFFFF" } },
-            fill: { fgColor: { rgb: "0E4D92" } },
-            alignment: { horizontal: "center" }
-        };
-    }
-
-    XLSX.utils.book_append_sheet(wb, ws, 'Reporte Retardos');
-
-    const infoData = [
-        ['REPORTE QUINCENAL DE RETARDOS'],
-        [''],
-        ['Periodo:', `${formatearFecha(reporteData.fechaInicio)} al ${formatearFecha(reporteData.fechaFin)}`],
-        ['Fecha de emisión:', new Date().toLocaleDateString('es-MX')],
-        ['Total de maestros con retraso:', reporteData.maestros.length],
-        ['Total de minutos acumulados:', totalMinutos]
+    // Ancho de columnas
+    ws['!cols'] = [
+        { wch: 5 },
+        { wch: 40 },
+        { wch: 20 },
+        { wch: 18 },
+        { wch: 18 }
     ];
 
-    const wsInfo = XLSX.utils.aoa_to_sheet(infoData);
-    XLSX.utils.book_append_sheet(wb, wsInfo, 'Información');
+    // Merges para el membrete
+    ws['!merges'] = [
+        { s: { r: 0, c: 1 }, e: { r: 0, c: 4 } },
+        { s: { r: 1, c: 1 }, e: { r: 1, c: 4 } },
+        { s: { r: 2, c: 1 }, e: { r: 2, c: 4 } },
+        { s: { r: 3, c: 1 }, e: { r: 3, c: 4 } },
+        { s: { r: 5, c: 1 }, e: { r: 5, c: 4 } },
+        { s: { r: 6, c: 1 }, e: { r: 6, c: 4 } },
+        { s: { r: 7, c: 1 }, e: { r: 7, c: 4 } }
+    ];
+
+    XLSX.utils.book_append_sheet(wb, ws, 'Reporte Retardos');
 
     XLSX.writeFile(wb, `Reporte_Retardos_${reporteData.fechaInicio}_al_${reporteData.fechaFin}.xlsx`);
 }
