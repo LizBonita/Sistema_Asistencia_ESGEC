@@ -1335,7 +1335,7 @@ function exportarPDF() {
     // Logo secretaría (derecha)
     try {
         if (reporteData.logoSecretaria && reporteData.logoSecretaria.length > 100) {
-            doc.addImage(reporteData.logoSecretaria, 'PNG', pageW - 14 - logoSize, logoY, logoSize * 2.2, logoSize * 0.65);
+            doc.addImage(reporteData.logoSecretaria, 'PNG', pageW - 58, logoY, logoSize * 2.2, logoSize * 0.65);
         }
     } catch(e) {
         console.error('Error logo secretaría:', e);
